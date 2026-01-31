@@ -6,3 +6,6 @@
 // RGB Matrix custom configuration
 #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
 #define RGB_MATRIX_DEFAULT_VAL 77  // Brightness 30/100 (77/255)
+
+// Split keyboard user transaction IDs
+#define SPLIT_TRANSACTION_IDS_USER RPC_ID_USER_STATE_SYNC
