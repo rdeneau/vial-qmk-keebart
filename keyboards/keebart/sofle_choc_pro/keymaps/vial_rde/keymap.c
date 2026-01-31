@@ -240,6 +240,11 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         rgb_matrix_set_color(matrix_to_led(8, 1), CLR_ORANGE); // +
     }
 
+    // Caps Lock indicator - Green when active
+    if (host_keyboard_led_state().caps_lock) {
+        rgb_matrix_set_color(matrix_to_led(3, 0), CLR_GREEN); // Caps Lock key
+    }
+
     return false;
 }
 
