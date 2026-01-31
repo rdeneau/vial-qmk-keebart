@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include QMK_KEYBOARD_H
+#include "transactions.h"
 
 enum layers {
     BASE,  // default layer
@@ -98,6 +99,22 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #define CLR_BLUE    0, 0, 255      // #0000ff
 #define CLR_OFF     0, 0, 0
 
+// State variable for O key color toggle (synced between halves)
+typedef struct {
+    bool o_key_is_green;
+} user_state_t;
+
+static user_state_t user_state = {
+    .o_key_is_green = false
+};
+
+// Split keyboard synchronization callback
+void user_state_sync(uint8_t initiator2target_buffer_size, const void* initiator2target_buffer, uint8_t target2initiator_buffer_size, void* target2initiator_buffer) {
+    if (initiator2target_buffer_size == sizeof(user_state)) {
+        memcpy(&user_state, initiator2target_buffer, sizeof(user_state));
+    }
+}
+
 // Helper function to find LED index by matrix position
 static uint8_t matrix_to_led(uint8_t row, uint8_t col) {
     // LED layout mapping from keyboard.json
@@ -125,13 +142,24 @@ static uint8_t matrix_to_led(uint8_t row, uint8_t col) {
     return 255; // Not found
 }
 
-// Keyboard post-init to set default brightness
+// Keyboard post-init to set default brightness and register split sync
 void keyboard_post_init_user(void) {
     rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
     rgb_matrix_sethsv_noeeprom(0, 0, 0); // Start with all LEDs off
     rgb_matrix_set_speed_noeeprom(128);
     rgb_matrix_enable_noeeprom();
     rgb_matrix_set_flags(LED_FLAG_ALL);
+    
+    // Register split keyboard sync
+    transaction_register_rpc(RPC_ID_USER_STATE_SYNC, user_state_sync);
+}
+
+// Sync state between keyboard halves
+void housekeeping_task_user(void) {
+    if (is_keyboard_master()) {
+        // Sync state from master to slave
+        transaction_rpc_send(RPC_ID_USER_STATE_SYNC, sizeof(user_state), &user_state);
+    }
 }
 
 // Custom LED indicator function
@@ -185,10 +213,12 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         rgb_matrix_set_color(matrix_to_led(7, 1), CLR_GREEN); // ;
 
         // Special keys
-        // O key (dead key) - Red - 4th visual column of right part
-        // Right side cols: 5, 4, 3, 2, 1, 0 (Y, U, I, O, P, Del)
-        // O is at [6, 2] (4th visual column from left)
-        rgb_matrix_set_color(matrix_to_led(6, 2), CLR_RED); // O
+        // O key (dead key) - toggles between Red and Green
+        if (user_state.o_key_is_green) {
+            rgb_matrix_set_color(matrix_to_led(6, 2), CLR_GREEN);
+        } else {
+            rgb_matrix_set_color(matrix_to_led(6, 2), CLR_RED);
+        }
 
         // TG(LOWER)/NAV thumb key - Orange
         rgb_matrix_set_color(matrix_to_led(4, 2), CLR_ORANGE); // NAV
@@ -249,3 +279,16 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 
 #endif // RGB_MATRIX_ENABLE
+
+// Process key presses
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case KC_O:
+            if (record->event.pressed) {
+                // Toggle O key color state when pressed
+                user_state.o_key_is_green = !user_state.o_key_is_green;
+            }
+            break;
+    }
+    return true;
+}
