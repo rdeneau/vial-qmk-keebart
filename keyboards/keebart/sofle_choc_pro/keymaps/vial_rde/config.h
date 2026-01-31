@@ -2,3 +2,7 @@
 
 #define VIAL_UNLOCK_COMBO_ROWS {0, 5}
 #define VIAL_UNLOCK_COMBO_COLS {0, 0}
+
+// RGB Matrix custom configuration
+#define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
+#define RGB_MATRIX_DEFAULT_VAL 77  // Brightness 30/100 (77/255)
