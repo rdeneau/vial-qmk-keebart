@@ -91,12 +91,12 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #ifdef RGB_MATRIX_ENABLE
 
 // Color definitions
-#define CLR_WHITE   238, 238, 238  // #eeeeee
-#define CLR_YELLOW  255, 255, 0    // #ffff00
-#define CLR_GREEN   0,   255, 0    // #00ff00
-#define CLR_ORANGE  255, 140, 0    // #ff8c00
-#define CLR_RED     255, 0, 0      // #ff0000
-#define CLR_BLUE    0, 0, 255      // #0000ff
+#define CLR_WHITE   60, 60, 60     // #3c3c3c (25% brightness)
+#define CLR_YELLOW  64, 64, 0      // #404000 (25% brightness)
+#define CLR_GREEN   0,   64, 0     // #004000 (25% brightness)
+#define CLR_ORANGE  64, 35, 0      // #402300 (25% brightness)
+#define CLR_RED     64, 0, 0       // #400000 (25% brightness)
+#define CLR_BLUE    0, 0, 64       // #000040 (25% brightness)
 #define CLR_OFF     0, 0, 0
 
 // State variable for O key color toggle (synced between halves)
