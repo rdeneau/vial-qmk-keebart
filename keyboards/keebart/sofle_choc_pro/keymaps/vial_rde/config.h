@@ -15,3 +15,8 @@
 // host layout. WinCompose must be configured with the same key (Scroll Lock).
 #define UNICODE_SELECTED_MODES UNICODE_MODE_WINCOMPOSE
 #define UNICODE_KEY_WINC KC_SCROLL_LOCK
+
+// Auto Shift is toggled from Vial's QMK Settings tab and defaults to off after
+// an EEPROM clear (quantum/qmk_settings.c:192, hardcoded). Only its timeout
+// takes its default from here.
+#define AUTO_SHIFT_TIMEOUT 175

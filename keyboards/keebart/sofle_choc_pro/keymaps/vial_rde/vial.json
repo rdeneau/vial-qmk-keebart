@@ -314,5 +314,67 @@
                 "9,3"
             ]
         ]
-    }
+    },
+    "customKeycodes": [
+        {
+            "name": "EG_DLR",
+            "title": "$ / 1 (shift or caps lock)",
+            "shortName": "$\n1"
+        },
+        {
+            "name": "EG_EUR",
+            "title": "euro / 2 (shift or caps lock)",
+            "shortName": "Eur\n2"
+        },
+        {
+            "name": "EG_PCT",
+            "title": "% / 5 (shift or caps lock)",
+            "shortName": "%\n5"
+        },
+        {
+            "name": "EG_LPRN",
+            "title": "( / 6 (shift or caps lock)",
+            "shortName": "(\n6"
+        },
+        {
+            "name": "EG_RPRN",
+            "title": ") / 7 (shift or caps lock)",
+            "shortName": ")\n7"
+        },
+        {
+            "name": "EG_AT",
+            "title": "@ / 8 (shift or caps lock)",
+            "shortName": "@\n8"
+        },
+        {
+            "name": "EG_HASH",
+            "title": "# / 9 (shift or caps lock)",
+            "shortName": "#\n9"
+        },
+        {
+            "name": "EG_SLSH",
+            "title": "/ / 0 (shift or caps lock)",
+            "shortName": "/\n0"
+        },
+        {
+            "name": "EG_COMM",
+            "title": ", / ; (shift or caps lock)",
+            "shortName": ",\n;"
+        },
+        {
+            "name": "EG_DOT",
+            "title": ". / : (shift or caps lock)",
+            "shortName": ".\n:"
+        },
+        {
+            "name": "EG_MINS",
+            "title": "- / _ (shift or caps lock)",
+            "shortName": "-\n_"
+        },
+        {
+            "name": "EG_PSCR",
+            "title": "PrtScr / hold NAV_NUM / double tap locks it",
+            "shortName": "PrtScr"
+        }
+    ]
 }

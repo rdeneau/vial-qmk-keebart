@@ -4,11 +4,36 @@
 #include QMK_KEYBOARD_H
 #include "transactions.h"
 
+// The host OS layout is French AZERTY: the firmware only sends raw scancodes
+// and the host turns them into Ergol-R glyphs (KC_A -> q, KC_W -> z,
+// KC_SCLN -> m, KC_M -> ',', RALT(KC_E) -> EUR ...). Read every keycode below
+// with that in mind.
 enum layers {
-    BASE,   // default layer
-    LOWER,  // NAV layer
-    RAISE,  // raise layer
-    UNICODE // French accents, quotes, arrows
+    BASE,    // Ergol-R
+    NAV_NUM, // navigation, editing, numpad, F1-F12
+    RAISE,   // unchanged, still unreachable
+    DK1      // 1dk dead key layer
+};
+
+// Keys carrying two glyphs that the AZERTY host cannot pair on its own.
+// Shift (or Caps Lock) selects the second glyph - see tap_dual_glyph().
+//
+// The enum starts at QK_KB_0, not SAFE_RANGE: that is the range Vial's
+// "customKeycodes" in vial.json addresses, and both lists must match in order
+// and in number or the GUI falls back to raw hex.
+enum custom_keycodes {
+    EG_DLR = QK_KB_0,    // $ 1
+    EG_EUR,              // EUR 2
+    EG_PCT,              // % 5
+    EG_LPRN,             // ( 6
+    EG_RPRN,             // ) 7
+    EG_AT,               // @ 8
+    EG_HASH,             // # 9
+    EG_SLSH,             // / 0
+    EG_COMM,             // , ;
+    EG_DOT,              // . :
+    EG_MINS,             // - _
+    EG_PSCR              // tap: PrtScr, hold: NAV_NUM, double tap: toggle NAV_NUM
 };
 
 // Unicode map indices. Each pair is (lowercase/simple, uppercase/heavy); the
@@ -67,49 +92,56 @@ const uint32_t PROGMEM unicode_map[] = {
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*
- * QWERTY
+ * BASE - Ergol-R (glyphs as rendered by the French AZERTY host)
  * ColL ->  0      1      2      3      4      5                           5      4      3      2      1      0 <- ColR
  * RowL ,-----------------------------------------.                    ,-----------------------------------------. RowR
- *   0  | Esc  |  F2  |  F3  |  F4  |  F5  |  F6  |                    |  F7  |  F8  |  F9  | F10  | F11  | F12  |  5
+ *   0  | Esc  | $  1 | EUR2 | "  3 | '  4 | %  5 |                    | (  6 | )  7 | @  8 | #  9 | /  0 | =  + |  5
  *      |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- *   1  | Tab  |   Q  |   W  |   E  |   R  |   T  |                    |   Y  |   U  |   I  |   O  |   P  | Del  |  6
+ *   1  | Tab  |   q  |   b  |   o  |   p  |   w  |                    |   j  |   m  |   d  | 1dk  |   y  | *  u |  6
  *      |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- *   2  |LShift|   A  |   S  |   D  |   F  |   G  |-------.    ,-------|   H  |   J  |   K  |   L  |   ;  | Bspc |  7
- *      |------+------+------+------+------+------|BrwBack|    | Calc  |------+------+------+------+------+------|
- *   3  | Caps |   Z  |   X  |   C  |   V  |   B  |-------|    |-------|   N  |   M  |   ,  |   .  |   /  |RShift|  8
+ *   2  |LShift|   a  |   s  |   e  |   n  |   f  |-------.    ,-------|   l  |   r  |   t  |   i  |   u  | Bspc |  7
+ *      |------+------+------+------+------+------| Space |    | Enter |------+------+------+------+------+------|
+ *   3  |LCtrl |   z  |   x  |   c  |   v  | ,  ; |-------|    |-------| .  : |   h  |   g  | -  _ |   k  |PrtScn|  8
  *      `-----------------------------------------/       /     \      \-----------------------------------------'
- *   4             | LGui | LAlt | NAV  | LCtrl| / Enter /       \Space \  |RCtrl | RAlt | UNI  | RGui |            9
+ *   4             | LGui | Left |Right | Del  | / Enter /       \Space \  | Bspc |  Up  | Down | RGui |            9
  *                 |      |      |      |      |/       /         \      \ |      |      |      |      |
  *                 `----------------------------------'           '------''---------------------------'
+ *
+ * The upper row and the four ,;/.:/-_ keys emit their second glyph under
+ * Shift or Caps Lock; KC_3, KC_4, KC_EQL and KC_NUHS already do so via the
+ * host layout and stay bare keycodes.
+ * PrtScn: tap = PrtScr, hold = NAV_NUM, double tap = toggle NAV_NUM.
  */
 
 [BASE] = LAYOUT_split_4x6_5(
-  KC_ESC,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,                     KC_F7,   KC_F8,   KC_F9,  KC_F10,  KC_F11,  KC_F12,
-  KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                      KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_DEL,
-  KC_LSFT,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                      KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_BSPC,
-  KC_CAPS,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B, KC_WBAK,    KC_CALC, KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RSFT,
-                 KC_LGUI, KC_LALT, TG(LOWER), KC_LCTL, KC_ENT,       KC_SPC, KC_RCTL, KC_RALT, MO(UNICODE), KC_RGUI
+  KC_ESC,   EG_DLR,  EG_EUR,   KC_3,    KC_4,  EG_PCT,                    EG_LPRN, EG_RPRN,   EG_AT, EG_HASH, EG_SLSH,  KC_EQL,
+  KC_TAB,     KC_A,    KC_B,   KC_O,    KC_P,    KC_Z,                       KC_J, KC_SCLN,    KC_D, OSL(DK1),   KC_Y, KC_NUHS,
+  KC_LSFT,    KC_Q,    KC_S,   KC_E,    KC_N,    KC_F,                       KC_L,    KC_R,    KC_T,    KC_I,    KC_U, KC_BSPC,
+  KC_LCTL,    KC_W,    KC_X,   KC_C,    KC_V, EG_COMM,  KC_SPC,    KC_ENT, EG_DOT,    KC_H,    KC_G, EG_MINS,    KC_K, EG_PSCR,
+                    KC_LGUI, KC_LEFT, KC_RGHT, KC_DEL, KC_ENT,    KC_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
 ),
-/* LOWER - Navigation & Numpad
+/* NAV_NUM - navigation, editing, numpad, F-keys
+ * Ctrl shortcuts are written in AZERTY scancodes: Ctrl+Z (undo) is C(KC_W),
+ * because the physical KC_Z key types 'w' on the host.
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |      |  F1  |      |      |      |      |                    |      |      |      |      |      |      |
+ * |      |  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F11  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |      | Home |  Up  | End  |PgUp  |                    |  /   |   7  |   8  |   9  |  *   |      |
+ * |      | Redo | Home |  Up  | End  | PgUp |                    |  KP7 |  KP8 |  KP9 |  KP- |  KP/ | F12  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |      | Left | Down |Right |PgDn  |-------.    ,-------|  .   |   4  |   5  |   6  |  0   |      |
- * |------+------+------+------+------+------| Home  |    |  End  |------+------+------+------+------+------|
- * |      |      | Ins  | Del  | Bksp |PrtSc |-------|    |-------|  -   |   1  |   2  |   3  |  +   |      |
+ * |      | Undo | Left | Down |Right | PgDn |-------.    ,-------|  KP4 |  KP5 |  KP6 |  KP+ |  KP* |      |
+ * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
+ * |      | Cut  | Copy |Paste |PasteT|      |-------|    |-------|  KP1 |  KP2 |  KP3 | KPEnt|  KP= |NumLck|
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            |      |      |      |      | /       /       \      \  |      |      |      |      |
+ *            |      |      |      | Del  | / Bspc  /       \ KP0  \  | KP.  |      |      |      |
  *            |      |      |      |      |/       /         \      \ |      |      |      |      |
  *            `----------------------------------'           '------''---------------------------'
  */
-[LOWER] = LAYOUT_split_4x6_5(
-  _______, KC_F1, _______, _______, _______, _______,                     _______, _______, _______, _______, _______, _______,
-  _______, _______, KC_HOME,   KC_UP,  KC_END, KC_PGUP,                   KC_SLSH,   KC_7,    KC_8,    KC_9, KC_ASTR, _______,
-  _______, _______, KC_LEFT, KC_DOWN, KC_RGHT, KC_PGDN,                   KC_DOT,    KC_4,    KC_5,    KC_6,    KC_0, _______,
-  _______,  _______,  KC_INS,  KC_DEL, KC_BSPC, KC_PSCR, KC_HOME, KC_END, KC_MINS,   KC_1,    KC_2,    KC_3, KC_PLUS, _______,
-                     _______, _______, _______, _______, KC_MPLY, KC_MPRV, _______, _______, _______, _______
+[NAV_NUM] = LAYOUT_split_4x6_5(
+  _______,   KC_F1,   KC_F2,   KC_F3,    KC_F4,    KC_F5,                    KC_F6,  KC_F7,  KC_F8,   KC_F9,  KC_F10,  KC_F11,
+  _______, C(KC_Y), KC_HOME,   KC_UP,   KC_END,  KC_PGUP,                    KC_P7,  KC_P8,  KC_P9, KC_PMNS, KC_PSLS,  KC_F12,
+  _______, C(KC_W), KC_LEFT, KC_DOWN,  KC_RGHT,  KC_PGDN,                    KC_P4,  KC_P5,  KC_P6, KC_PPLS, KC_PAST, _______,
+  _______, C(KC_X), C(KC_C), C(KC_V), G(C(A(KC_V))), _______, _______, _______, KC_P1, KC_P2, KC_P3, KC_PENT, KC_PEQL,  KC_NUM,
+                    _______, _______, _______, KC_DEL, KC_BSPC,    KC_P0, KC_PDOT, _______, _______, _______
 ),
 /* RAISE
  * ,----------------------------------------.                    ,-----------------------------------------.
@@ -132,7 +164,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______, C(KC_Z), C(KC_X), C(KC_C), C(KC_V), XXXXXXX,  _______,       _______,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,   XXXXXXX, _______,
                          _______, _______, _______, _______, _______,       _______, _______, _______, _______, _______
 ),
-/* UNICODE - French accents, quotes, arrows (hold the right thumb UNI key)
+/* DK1 - 1dk dead key: French accents, quotes, arrows (tap the 1dk key, OSL)
+ * Positions are still the QWERTY-mnemonic ones from the previous commit; they
+ * are re-placed on the Ergol-R 1dk grid in a later batch.
  * Shift (or Caps Word) gives the uppercase / heavy counterpart.
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
@@ -147,7 +181,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *            |      |      |      |      |/       /         \      \ |      |      |      |      |
  *            `----------------------------------'           '------''---------------------------'
  */
-[UNICODE] = LAYOUT_split_4x6_5(
+[DK1] = LAYOUT_split_4x6_5(
   _______, _______, _______, _______, _______, _______,                                        _______,     _______,    _______,     _______,    _______,    _______,
   _______, UP(AE, AE_UP), _______, UP(E_ACU, E_ACU_UP), UP(E_GRV, E_GRV_UP), UP(E_CIR, E_CIR_UP),   UP(U_GRV, U_GRV_UP), UP(U_CIR, U_CIR_UP), UP(I_CIR, I_CIR_UP), UP(I_DIA, I_DIA_UP), UP(O_CIR, O_CIR_UP), UP(OE, OE_UP),
   _______, UP(A_GRV, A_GRV_UP), UP(A_CIR, A_CIR_UP), _______, _______, _______,                 UM(LAQUO),   UM(RAQUO),  UM(RSQUO),   UM(LSAQ),   UM(RSAQ),   _______,
@@ -158,10 +192,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 #if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
-    [BASE]  = { ENCODER_CCW_CW(KC_WH_L, KC_WH_R), ENCODER_CCW_CW(KC_WH_D, KC_WH_U) },
-    [LOWER] = { ENCODER_CCW_CW(KC_LEFT, KC_RGHT), ENCODER_CCW_CW(KC_UP,   KC_DOWN) },
+    [BASE]  = { ENCODER_CCW_CW(KC_UP,   KC_DOWN), ENCODER_CCW_CW(KC_LEFT, KC_RGHT) },
+    [NAV_NUM] = { ENCODER_CCW_CW(KC_WH_U, KC_WH_D), ENCODER_CCW_CW(KC_WH_L, KC_WH_R) },
     [RAISE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
-    [UNICODE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) }
+    [DK1] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) }
 };
 #endif
 
@@ -250,7 +284,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     }
 
     // BASE layer colors (always applied first)
-    if (layer == BASE || layer == LOWER) {
+    if (layer == BASE || layer == NAV_NUM) {
         // Edge columns - White (first column left only)
         // Left half first column (col 0) - rows 0-3
         rgb_matrix_set_color(matrix_to_led(0, 0), CLR_WHITE);
@@ -298,7 +332,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             rgb_matrix_set_color(matrix_to_led(6, 2), CLR_RED);
         }
 
-        // TG(LOWER)/NAV thumb key - Orange
+        // NAV thumb key - Orange
         rgb_matrix_set_color(matrix_to_led(4, 2), CLR_ORANGE); // NAV
 
         // Right thumb keys: Space[9,4], RCtrl[9,3], RAlt[9,2], Menu[9,1], RGui[9,0]
@@ -307,8 +341,8 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         // 4th thumb key = Menu at [9, 1] - NOT colored (remains OFF)
     }
 
-    // LOWER layer overlay - Orange for navigation and numpad keys
-    if (layer == LOWER) {
+    // NAV_NUM layer overlay - Orange for navigation and numpad keys
+    if (layer == NAV_NUM) {
         rgb_matrix_set_color(matrix_to_led(0, 1), CLR_ORANGE); // F1
         rgb_matrix_set_color(matrix_to_led(5, 1), CLR_YELLOW); // F11 (remains Yellow, was actually Orange!?)
 
@@ -358,6 +392,139 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 
 #endif // RGB_MATRIX_ENABLE
 
+// Dual-glyph keys -----------------------------------------------------------
+//
+// Vial cannot express these: a dynamic tap dance only offers tap/hold, and a
+// static key_overrides[] is ignored under Vial (keymap_introspection.c guards
+// on !VIAL_KEY_OVERRIDE_ENABLE). A key override would also be blind to Caps
+// Lock. So the pairs live here.
+
+typedef struct {
+    uint16_t keycode;
+    uint16_t unshifted;
+    uint16_t shifted;
+} dual_glyph_t;
+
+static const dual_glyph_t dual_glyphs[] = {
+    {EG_DLR,  KC_RBRC,          LSFT(KC_1)}, // $ 1
+    {EG_EUR,  RALT(KC_E),       LSFT(KC_2)}, // EUR 2
+    {EG_PCT,  LSFT(KC_QUOT),    LSFT(KC_5)}, // % 5
+    {EG_LPRN, KC_5,             LSFT(KC_6)}, // ( 6
+    {EG_RPRN, KC_MINS,          LSFT(KC_7)}, // ) 7
+    {EG_AT,   RALT(KC_0),       LSFT(KC_8)}, // @ 8
+    {EG_HASH, RALT(KC_3),       LSFT(KC_9)}, // # 9
+    {EG_SLSH, LSFT(KC_DOT),     LSFT(KC_0)}, // / 0
+    {EG_COMM, KC_M,             KC_COMM},    // , ;
+    {EG_DOT,  LSFT(KC_COMM),    KC_DOT},     // . :
+    {EG_MINS, KC_6,             KC_8},       // - _
+};
+
+_Static_assert(ARRAY_SIZE(dual_glyphs) == EG_PSCR - EG_DLR,
+               "dual_glyphs[] must stay aligned with the EG_* enum order");
+
+// The French Windows layout already inverts the digit row under Caps Lock
+// (KC_1 alone types '1'). Undo that so the pair above stays literal.
+static uint16_t apply_caps_lock_digit_row(uint16_t keycode) {
+    uint8_t basic = keycode & 0xFF;
+    if (basic < KC_1 || basic > KC_0) {
+        return keycode;
+    }
+    return keycode ^ QK_LSFT;
+}
+
+static void tap_dual_glyph(const dual_glyph_t *pair) {
+    // These keys never reach process_caps_word (process_record_user consumes
+    // them first), so Caps Word survives on its own. But its pending weak shift
+    // would flip the glyph to the digit mid-word. Drop it, except on EG_MINS
+    // where '_' is what snake_case wants - the same call QMK's default
+    // caps_word_press_user makes for KC_MINS.
+    if (is_caps_word_on() && pair->keycode != EG_MINS) {
+        del_weak_mods(MOD_BIT(KC_LSFT));
+    }
+
+    uint8_t mods = get_mods() | get_weak_mods();
+#ifndef NO_ACTION_ONESHOT
+    mods |= get_oneshot_mods();
+#endif
+    bool caps = host_keyboard_led_state().caps_lock;
+    // Same rule as unicodemap_index(): Shift XOR Caps Lock picks the second glyph.
+    bool want_shifted = ((mods & MOD_MASK_SHIFT) != 0) ^ caps;
+
+    uint16_t keycode = want_shifted ? pair->shifted : pair->unshifted;
+    if (caps) {
+        keycode = apply_caps_lock_digit_row(keycode);
+    }
+
+    // The physical Shift must not leak into the keycode we send.
+    uint8_t saved_mods = get_mods();
+    del_mods(MOD_MASK_SHIFT);
+    del_weak_mods(MOD_MASK_SHIFT);
+#ifndef NO_ACTION_ONESHOT
+    del_oneshot_mods(MOD_MASK_SHIFT);
+#endif
+    send_keyboard_report();
+
+    tap_code16(keycode);
+
+    set_mods(saved_mods);
+    send_keyboard_report();
+}
+
+// PrtScr: tap / hold / double tap ---------------------------------------------
+//
+// Hand-rolled because Vial owns tap_dance_actions[] (vial.c), so a static tap
+// dance does not link. KC_PSCR is held back until the double-tap window closes,
+// otherwise a double tap would flash the Windows capture overlay first.
+
+enum pscr_state { PSCR_IDLE, PSCR_HELD, PSCR_TAPPED };
+
+static struct {
+    enum pscr_state state;
+    uint16_t        timer;
+    bool            locked; // layer left on by a double tap
+} pscr = {PSCR_IDLE, 0, false};
+
+static void pscr_press(void) {
+    if (pscr.locked) {
+        // Any further tap just releases the lock - no PrtScr.
+        layer_off(NAV_NUM);
+        pscr.locked = false;
+        pscr.state  = PSCR_IDLE;
+        return;
+    }
+    if (pscr.state == PSCR_TAPPED && timer_elapsed(pscr.timer) < TAPPING_TERM) {
+        // Second tap inside the window: lock the layer, swallow the PrtScr.
+        layer_on(NAV_NUM);
+        pscr.locked = true;
+        pscr.state  = PSCR_IDLE;
+        return;
+    }
+    pscr.state = PSCR_HELD;
+    pscr.timer = timer_read();
+    layer_on(NAV_NUM);
+}
+
+static void pscr_release(void) {
+    if (pscr.state != PSCR_HELD) {
+        return;
+    }
+    layer_off(NAV_NUM);
+    if (timer_elapsed(pscr.timer) < TAPPING_TERM) {
+        // Might be the first half of a double tap: wait before typing PrtScr.
+        pscr.state = PSCR_TAPPED;
+        pscr.timer = timer_read();
+    } else {
+        pscr.state = PSCR_IDLE;
+    }
+}
+
+void matrix_scan_user(void) {
+    if (pscr.state == PSCR_TAPPED && timer_elapsed(pscr.timer) >= TAPPING_TERM) {
+        pscr.state = PSCR_IDLE;
+        tap_code(KC_PSCR);
+    }
+}
+
 // Process key presses
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
@@ -367,6 +534,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 user_state.o_key_is_green = !user_state.o_key_is_green;
             }
             break;
+
+        case EG_PSCR:
+            if (record->event.pressed) {
+                pscr_press();
+            } else {
+                pscr_release();
+            }
+            return false;
+
+        case EG_DLR ... EG_MINS:
+            if (record->event.pressed) {
+                tap_dual_glyph(&dual_glyphs[keycode - EG_DLR]);
+            }
+            return false;
     }
     return true;
 }
