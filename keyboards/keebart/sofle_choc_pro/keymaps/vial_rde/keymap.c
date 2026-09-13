@@ -3,6 +3,11 @@
 
 #include QMK_KEYBOARD_H
 #include "transactions.h"
+// Overrides the weak US ASCII lookup tables of send_string.c. Unicode input
+// types its hex digits through send_char(), so without this the WinCompose
+// sequence for U+00E0 comes out as "uaaea" on the French AZERTY host: KC_0
+// types a-grave there, not a zero.
+#include "sendstring_french.h"
 
 // The host OS layout is French AZERTY: the firmware only sends raw scancodes
 // and the host turns them into Ergol-R glyphs (KC_A -> q, KC_W -> z,
