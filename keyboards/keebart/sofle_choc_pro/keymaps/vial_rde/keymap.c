@@ -248,15 +248,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * Shift (or Caps Lock) gives the 2dk counterpart, so the whole 2dk layer is
  * folded into UP() pairs instead of a second dead key. One deviation follows
  * from that: the Glove80 puts a-circumflex on its Shift key, which has to stay
- * Shift here, so it moved to the far right of the same row.
+ * Shift here. It takes the ae slot, right above a-grave, and ae moves to the
+ * free key at the end of the a-grave row.
  * Tapping the dead key again reaches the emoji layer, as the third tap does on
  * the Glove80.
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |  2   |  o/  |  <<  |  >>  |  '   |  deg |                    |      |      |      |  #   |  div |  !=  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Tab  |  ae  |  oe  |  o^  |  par |      |                    |  o/  |  mu  |      |EMOJI |  *   |  x   |
+ * | Tab  |  a^  |  oe  |  o^  |  par |      |                    |  o/  |  mu  |      |EMOJI |  *   |  x   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |  a`  |  e`  |  e'  |  e^  |  a^  |-------.    ,-------|  |_  |  --  |  i:  |  i^  |  u^  |  u`  |
+ * |      |  a`  |  e`  |  e'  |  e^  |  ae  |-------.    ,-------|  |_  |  --  |  i:  |  i^  |  u^  |  u`  |
  * |------+------+------+------+------+------|       |    | back  |------+------+------+------+------+------|
  * |      |  <   |  X   |  c,  |  >   |      |-------|    |-------|  .   | ...  | diam |  -   |  ok  |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
@@ -265,8 +266,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [DK1] = LAYOUT_split_4x6_5(
   UM(SUP2), UM(CURREN), UP(LAQUO, LAQUO_UP), UP(RAQUO, RAQUO_UP), UM(RSQUO), UM(DEGREE),        _______, _______, _______, UP(SHARP, SHARP_UP), UM(DIVIDE), UP(NEQ, NEQ_UP),
-  KC_TAB,   UP(AE, AE_UP),   UP(OE, OE_UP),   UP(O_CIR, O_CIR_UP), UM(SECT), _______,                 UP(O_SLSH, O_SLSH_UP), UM(MICRO), _______, OSL(EMOJI), UP(STAR, STAR_UP), UP(TIMES, TIMES_UP),
-  _______,  UP(A_GRV, A_GRV_UP), UP(E_GRV, E_GRV_UP), UP(E_ACU, E_ACU_UP), UP(E_CIR, E_CIR_UP), UP(A_CIR, A_CIR_UP),                UP(BOX_UR, BOX_UR_UP), UP(BOX_H, BOX_H_UP), UP(I_DIA, I_DIA_UP), UP(I_CIR, I_CIR_UP), UP(U_CIR, U_CIR_UP), UP(U_GRV, U_GRV_UP),
+  KC_TAB,   UP(A_CIR, A_CIR_UP), UP(OE, OE_UP), UP(O_CIR, O_CIR_UP), UM(SECT), _______,                 UP(O_SLSH, O_SLSH_UP), UM(MICRO), _______, OSL(EMOJI), UP(STAR, STAR_UP), UP(TIMES, TIMES_UP),
+  _______,  UP(A_GRV, A_GRV_UP), UP(E_GRV, E_GRV_UP), UP(E_ACU, E_ACU_UP), UP(E_CIR, E_CIR_UP), UP(AE, AE_UP),                UP(BOX_UR, BOX_UR_UP), UP(BOX_H, BOX_H_UP), UP(I_DIA, I_DIA_UP), UP(I_CIR, I_CIR_UP), UP(U_CIR, U_CIR_UP), UP(U_GRV, U_GRV_UP),
   _______,  UP(LSAQ, LSAQ_UP), UP(CROSS, CROSS_UP), UP(C_CED, C_CED_UP), UP(RSAQ, RSAQ_UP), _______, _______, UM(CRARR), UP(MIDDOT, MIDDOT_UP), UP(ELLIP, ELLIP_UP), UM(DIAMOND), UP(DASH, DASH_UP), UP(CHECK, CHECK_UP), _______,
                     UP(ARR_LR, ARR_LR_UP), UP(ARR_L, ARR_L_UP), UP(ARR_R, ARR_R_UP), _______, _______,   UM(NBSP), UP(ARR_UH, ARR_UH_UP), UP(ARR_U, ARR_U_UP), UP(ARR_D, ARR_D_UP), UP(ARR_DH, ARR_DH_UP)
 ),
