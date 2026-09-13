@@ -12,7 +12,8 @@ enum layers {
     BASE,    // Ergol-R
     NAV_NUM, // navigation, editing, numpad, F1-F12
     RAISE,   // unchanged, still unreachable
-    DK1      // 1dk dead key layer
+    DK1,     // 1dk dead key: accents, typography, arrows
+    EMOJI    // 3dk, reached by tapping the dead key twice
 };
 
 // Keys carrying two glyphs that the AZERTY host cannot pair on its own.
@@ -33,61 +34,140 @@ enum custom_keycodes {
     EG_COMM,             // , ;
     EG_DOT,              // . :
     EG_MINS,             // - _
-    EG_PSCR              // tap: PrtScr, hold: NAV_NUM, double tap: toggle NAV_NUM
+    EG_PSCR,             // tap: PrtScr, hold: NAV_NUM, double tap: toggle NAV_NUM
+    // Emoji whose glyph needs a U+FE0F variation selector, so two code points:
+    // unicode_map holds one per entry, these go through send_unicode_string().
+    EG_SMILE,            // white smiling face
+    EG_INFO,             // information source
+    EG_RECY,             // recycling symbol
+    EG_POINT,            // index pointing up
+    EG_WARN,             // warning sign
+    EG_GEAR              // gear
 };
 
-// Unicode map indices. Each pair is (lowercase/simple, uppercase/heavy); the
-// second one is emitted when Shift or Caps Word is active, via UP(i, j).
+// Unicode map, transcribed from ergol-r_moergo.json (layers 1dk / 2dk /
+// 3dk). UP(i, j) packs both indices in 7 bits, so every pair must stay
+// under 128: the 1dk / 2dk pairs come first, singles and emoji after.
 enum unicode_names {
-    A_GRV, A_GRV_UP,   // a A with grave
-    A_CIR, A_CIR_UP,   // a A with circumflex
-    AE,    AE_UP,      // ae AE ligature
-    E_ACU, E_ACU_UP,   // e E with acute
-    E_GRV, E_GRV_UP,   // e E with grave
-    E_CIR, E_CIR_UP,   // e E with circumflex
-    I_CIR, I_CIR_UP,   // i I with circumflex
-    I_DIA, I_DIA_UP,   // i I with diaeresis
-    O_CIR, O_CIR_UP,   // o O with circumflex
-    OE,    OE_UP,      // oe OE ligature
-    U_GRV, U_GRV_UP,   // u U with grave
-    U_CIR, U_CIR_UP,   // u U with circumflex
-    C_CED, C_CED_UP,   // c C with cedilla
-    LAQUO, RAQUO,      // double angle quotes
-    RSQUO,             // typographic apostrophe
-    LSAQ,  RSAQ,       // single angle quotes
-    ARR_LR, ARR_LR_UP, // left-right arrow, single then double
-    ARR_L,  ARR_L_UP,  // left arrow
-    ARR_R,  ARR_R_UP,  // right arrow
-    ARR_U,  ARR_U_UP,  // up arrow
-    ARR_D,  ARR_D_UP,  // down arrow
-    CROSS,  CROSS_UP,  // ballot X, light then heavy
-    CHECK,  CHECK_UP   // check mark, light then heavy
+    LAQUO,    LAQUO_UP,    // << / heavy left quote
+    RAQUO,    RAQUO_UP,    // >> / heavy right quote
+    SHARP,    SHARP_UP,    // music sharp / plus-minus
+    NEQ,      NEQ_UP,      // not equal / almost equal
+    AE,       AE_UP,       // ae ligature
+    OE,       OE_UP,       // oe ligature
+    O_CIR,    O_CIR_UP,    // o circumflex
+    O_SLSH,   O_SLSH_UP,   // o slash
+    STAR,     STAR_UP,     // star / heavy asterisk
+    TIMES,    TIMES_UP,    // multiply / identical to
+    A_CIR,    A_CIR_UP,    // a circumflex
+    A_GRV,    A_GRV_UP,    // a grave
+    E_GRV,    E_GRV_UP,    // e grave
+    E_ACU,    E_ACU_UP,    // e acute
+    E_CIR,    E_CIR_UP,    // e circumflex
+    BOX_UR,   BOX_UR_UP,   // box up-right / vertical-right
+    BOX_H,    BOX_H_UP,    // box horizontal / vertical
+    I_DIA,    I_DIA_UP,    // i diaeresis
+    I_CIR,    I_CIR_UP,    // i circumflex
+    U_CIR,    U_CIR_UP,    // u circumflex
+    U_GRV,    U_GRV_UP,    // u grave
+    LSAQ,     LSAQ_UP,     // single left quote / left triangle
+    CROSS,    CROSS_UP,    // ballot X / heavy multiply
+    C_CED,    C_CED_UP,    // c cedilla
+    RSAQ,     RSAQ_UP,     // single right quote / right triangle
+    MIDDOT,   MIDDOT_UP,   // middle dot / bullet
+    ELLIP,    ELLIP_UP,    // ellipsis / small square
+    DASH,     DASH_UP,     // en dash / em dash
+    CHECK,    CHECK_UP,    // check / heavy check
+    ARR_LR,   ARR_LR_UP,   // left-right arrow
+    ARR_L,    ARR_L_UP,    // left arrow
+    ARR_R,    ARR_R_UP,    // right arrow
+    ARR_U,    ARR_U_UP,    // up arrow
+    ARR_D,    ARR_D_UP,    // down arrow
+    ARR_UH,   ARR_UH_UP,   // up arrowhead / up triangle
+    ARR_DH,   ARR_DH_UP,   // down arrowhead / down triangle
+    // 1dk characters with no 2dk counterpart
+    SUP2, CURREN, RSQUO, DEGREE, DIVIDE, SECT, MICRO, CRARR, NBSP, DIAMOND,
+    // Emoji layer, single code point only
+    E_QUEST, E_BUG, E_OK, E_ART, E_WAVE, E_MEMO, E_IDEA,
+    E_THUMB, E_ALERT, E_SPARK, E_EYES, E_PRAY, E_LINK, E_TEST,
+    E_UPSI, E_EXCL, E_ZAP, E_X, E_CONS, E_VERIF, E_ROBOT,
+    E_HOUR, E_KISS, E_LEFT, E_RIGHT, E_UP, E_DOWN
 };
 
 const uint32_t PROGMEM unicode_map[] = {
-    [A_GRV]  = 0x00E0, [A_GRV_UP]  = 0x00C0, // a A
-    [A_CIR]  = 0x00E2, [A_CIR_UP]  = 0x00C2, // a A
-    [AE]     = 0x00E6, [AE_UP]     = 0x00C6, // ae AE
-    [E_ACU]  = 0x00E9, [E_ACU_UP]  = 0x00C9, // e E
-    [E_GRV]  = 0x00E8, [E_GRV_UP]  = 0x00C8, // e E
-    [E_CIR]  = 0x00EA, [E_CIR_UP]  = 0x00CA, // e E
-    [I_CIR]  = 0x00EE, [I_CIR_UP]  = 0x00CE, // i I
-    [I_DIA]  = 0x00EF, [I_DIA_UP]  = 0x00CF, // i I
-    [O_CIR]  = 0x00F4, [O_CIR_UP]  = 0x00D4, // o O
-    [OE]     = 0x0153, [OE_UP]     = 0x0152, // oe OE
-    [U_GRV]  = 0x00F9, [U_GRV_UP]  = 0x00D9, // u U
-    [U_CIR]  = 0x00FB, [U_CIR_UP]  = 0x00DB, // u U
-    [C_CED]  = 0x00E7, [C_CED_UP]  = 0x00C7, // c C
-    [LAQUO]  = 0x00AB, [RAQUO]     = 0x00BB, // << >>
-    [RSQUO]  = 0x2019,                       // '
-    [LSAQ]   = 0x2039, [RSAQ]      = 0x203A, // < >
-    [ARR_LR] = 0x2194, [ARR_LR_UP] = 0x21D4,
-    [ARR_L]  = 0x2190, [ARR_L_UP]  = 0x21D0,
-    [ARR_R]  = 0x2192, [ARR_R_UP]  = 0x21D2,
-    [ARR_U]  = 0x2191, [ARR_U_UP]  = 0x21D1,
-    [ARR_D]  = 0x2193, [ARR_D_UP]  = 0x21D3,
-    [CROSS]  = 0x2717, [CROSS_UP]  = 0x2716,
-    [CHECK]  = 0x2713, [CHECK_UP]  = 0x2714
+    [LAQUO]    = 0x00AB, [LAQUO_UP]    = 0x275D, // << / heavy left quote
+    [RAQUO]    = 0x00BB, [RAQUO_UP]    = 0x275E, // >> / heavy right quote
+    [SHARP]    = 0x266F, [SHARP_UP]    = 0x00B1, // music sharp / plus-minus
+    [NEQ]      = 0x2260, [NEQ_UP]      = 0x2248, // not equal / almost equal
+    [AE]       = 0x00E6, [AE_UP]       = 0x00C6, // ae ligature
+    [OE]       = 0x0153, [OE_UP]       = 0x0152, // oe ligature
+    [O_CIR]    = 0x00F4, [O_CIR_UP]    = 0x00D4, // o circumflex
+    [O_SLSH]   = 0x00F8, [O_SLSH_UP]   = 0x00D8, // o slash
+    [STAR]     = 0x2605, [STAR_UP]     = 0x2731, // star / heavy asterisk
+    [TIMES]    = 0x00D7, [TIMES_UP]    = 0x2261, // multiply / identical to
+    [A_CIR]    = 0x00E2, [A_CIR_UP]    = 0x00C2, // a circumflex
+    [A_GRV]    = 0x00E0, [A_GRV_UP]    = 0x00C0, // a grave
+    [E_GRV]    = 0x00E8, [E_GRV_UP]    = 0x00C8, // e grave
+    [E_ACU]    = 0x00E9, [E_ACU_UP]    = 0x00C9, // e acute
+    [E_CIR]    = 0x00EA, [E_CIR_UP]    = 0x00CA, // e circumflex
+    [BOX_UR]   = 0x2514, [BOX_UR_UP]   = 0x251C, // box up-right / vertical-right
+    [BOX_H]    = 0x2500, [BOX_H_UP]    = 0x2502, // box horizontal / vertical
+    [I_DIA]    = 0x00EF, [I_DIA_UP]    = 0x00CF, // i diaeresis
+    [I_CIR]    = 0x00EE, [I_CIR_UP]    = 0x00CE, // i circumflex
+    [U_CIR]    = 0x00FB, [U_CIR_UP]    = 0x00DB, // u circumflex
+    [U_GRV]    = 0x00F9, [U_GRV_UP]    = 0x00D9, // u grave
+    [LSAQ]     = 0x2039, [LSAQ_UP]     = 0x25C1, // single left quote / left triangle
+    [CROSS]    = 0x2717, [CROSS_UP]    = 0x2716, // ballot X / heavy multiply
+    [C_CED]    = 0x00E7, [C_CED_UP]    = 0x00C7, // c cedilla
+    [RSAQ]     = 0x203A, [RSAQ_UP]     = 0x25B7, // single right quote / right triangle
+    [MIDDOT]   = 0x00B7, [MIDDOT_UP]   = 0x2022, // middle dot / bullet
+    [ELLIP]    = 0x2026, [ELLIP_UP]    = 0x25AA, // ellipsis / small square
+    [DASH]     = 0x2013, [DASH_UP]     = 0x2014, // en dash / em dash
+    [CHECK]    = 0x2713, [CHECK_UP]    = 0x2714, // check / heavy check
+    [ARR_LR]   = 0x2194, [ARR_LR_UP]   = 0x21D4, // left-right arrow
+    [ARR_L]    = 0x2190, [ARR_L_UP]    = 0x21D0, // left arrow
+    [ARR_R]    = 0x2192, [ARR_R_UP]    = 0x21D2, // right arrow
+    [ARR_U]    = 0x2191, [ARR_U_UP]    = 0x21D1, // up arrow
+    [ARR_D]    = 0x2193, [ARR_D_UP]    = 0x21D3, // down arrow
+    [ARR_UH]   = 0x2B9D, [ARR_UH_UP]   = 0x25B2, // up arrowhead / up triangle
+    [ARR_DH]   = 0x2B9F, [ARR_DH_UP]   = 0x25BC, // down arrowhead / down triangle
+    [SUP2]     = 0x00B2,                       // superscript two
+    [CURREN]   = 0x00A4,                       // currency sign
+    [RSQUO]    = 0x2019,                       // typographic apostrophe
+    [DEGREE]   = 0x00B0,                       // degree sign
+    [DIVIDE]   = 0x00F7,                       // division sign
+    [SECT]     = 0x00A7,                       // section sign
+    [MICRO]    = 0x00B5,                       // micro sign
+    [CRARR]    = 0x21A9,                       // carriage return arrow
+    [NBSP]     = 0x00A0,                       // no-break space
+    [DIAMOND]  = 0x25C6,                       // black diamond
+    [E_QUEST]  = 0x2753,                      // question
+    [E_BUG]    = 0x1F41B,                      // bug
+    [E_OK]     = 0x1F44C,                      // ok hand
+    [E_ART]    = 0x1F3A8,                      // artist palette
+    [E_WAVE]   = 0x1F44B,                      // waving hand
+    [E_MEMO]   = 0x1F4DD,                      // memo
+    [E_IDEA]   = 0x1F4A1,                      // light bulb
+    [E_THUMB]  = 0x1F44D,                      // thumbs up
+    [E_ALERT]  = 0x1F6A8,                      // siren
+    [E_SPARK]  = 0x2728,                      // sparkles
+    [E_EYES]   = 0x1F440,                      // eyes
+    [E_PRAY]   = 0x1F64F,                      // folded hands
+    [E_LINK]   = 0x1F517,                      // link
+    [E_TEST]   = 0x1F9EA,                      // test tube
+    [E_UPSI]   = 0x1F643,                      // upside-down face
+    [E_EXCL]   = 0x2757,                      // exclamation
+    [E_ZAP]    = 0x26A1,                      // high voltage
+    [E_X]      = 0x274C,                      // cross mark
+    [E_CONS]   = 0x1F6A7,                      // construction
+    [E_VERIF]  = 0x2705,                      // check mark button
+    [E_ROBOT]  = 0x1F916,                      // robot
+    [E_HOUR]   = 0x23F3,                      // hourglass
+    [E_KISS]   = 0x1F61A,                      // kissing face
+    [E_LEFT]   = 0x1F448,                      // point left
+    [E_RIGHT]  = 0x1F449,                      // point right
+    [E_UP]     = 0x1F446,                      // point up
+    [E_DOWN]   = 0x1F447                       // point down
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -164,29 +244,53 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______, C(KC_Z), C(KC_X), C(KC_C), C(KC_V), XXXXXXX,  _______,       _______,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,   XXXXXXX, _______,
                          _______, _______, _______, _______, _______,       _______, _______, _______, _______, _______
 ),
-/* DK1 - 1dk dead key: French accents, quotes, arrows (tap the 1dk key, OSL)
- * Positions are still the QWERTY-mnemonic ones from the previous commit; they
- * are re-placed on the Ergol-R 1dk grid in a later batch.
- * Shift (or Caps Word) gives the uppercase / heavy counterpart.
+/* DK1 - 1dk dead key, transcribed from the Glove80 1dk layer.
+ * Shift (or Caps Lock) gives the 2dk counterpart, so the whole 2dk layer is
+ * folded into UP() pairs instead of a second dead key. One deviation follows
+ * from that: the Glove80 puts a-circumflex on its Shift key, which has to stay
+ * Shift here, so it moved to the far right of the same row.
+ * Tapping the dead key again reaches the emoji layer, as the third tap does on
+ * the Glove80.
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
+ * |  2   |  o/  |  <<  |  >>  |  '   |  deg |                    |      |      |      |  #   |  div |  !=  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |  ae  |      |  e'  |  e`  |  e^  |                    |  u`  |  u^  |  i^  |  i:  |  o^  |  oe  |
+ * | Tab  |  ae  |  oe  |  o^  |  par |      |                    |  o/  |  mu  |      |EMOJI |  *   |  x   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |  a`  |  a^  |      |      |      |-------.    ,-------|  <<  |  >>  |  '   |  <   |  >   |      |
- * |------+------+------+------+------+------|  BAL  |    | CHECK |------+------+------+------+------+------|
- * |      |      |      |  c,  |      |      |-------|    |-------|  <-> |  <-  |  v   |  ^   |  ->  |      |
+ * |      |  a`  |  e`  |  e'  |  e^  |  a^  |-------.    ,-------|  |_  |  --  |  i:  |  i^  |  u^  |  u`  |
+ * |------+------+------+------+------+------|       |    | back  |------+------+------+------+------+------|
+ * |      |  <   |  X   |  c,  |  >   |      |-------|    |-------|  .   | ...  | diam |  -   |  ok  |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            |      |      |      |      | /       /       \      \  |      |      |      |      |
- *            |      |      |      |      |/       /         \      \ |      |      |      |      |
+ *            | <->  |  <-  |  ->  |      | /       /       \ NBSP \  |  ^^  |  up  | down |  vv  |
  *            `----------------------------------'           '------''---------------------------'
  */
 [DK1] = LAYOUT_split_4x6_5(
-  _______, _______, _______, _______, _______, _______,                                        _______,     _______,    _______,     _______,    _______,    _______,
-  _______, UP(AE, AE_UP), _______, UP(E_ACU, E_ACU_UP), UP(E_GRV, E_GRV_UP), UP(E_CIR, E_CIR_UP),   UP(U_GRV, U_GRV_UP), UP(U_CIR, U_CIR_UP), UP(I_CIR, I_CIR_UP), UP(I_DIA, I_DIA_UP), UP(O_CIR, O_CIR_UP), UP(OE, OE_UP),
-  _______, UP(A_GRV, A_GRV_UP), UP(A_CIR, A_CIR_UP), _______, _______, _______,                 UM(LAQUO),   UM(RAQUO),  UM(RSQUO),   UM(LSAQ),   UM(RSAQ),   _______,
-  _______, _______, _______, UP(C_CED, C_CED_UP), _______, _______, UP(CROSS, CROSS_UP),   UP(CHECK, CHECK_UP), UP(ARR_LR, ARR_LR_UP), UP(ARR_L, ARR_L_UP), UP(ARR_D, ARR_D_UP), UP(ARR_U, ARR_U_UP), UP(ARR_R, ARR_R_UP), _______,
-                         _______, _______, _______, _______, _______,       _______, _______, _______, _______, _______
+  UM(SUP2), UM(CURREN), UP(LAQUO, LAQUO_UP), UP(RAQUO, RAQUO_UP), UM(RSQUO), UM(DEGREE),        _______, _______, _______, UP(SHARP, SHARP_UP), UM(DIVIDE), UP(NEQ, NEQ_UP),
+  KC_TAB,   UP(AE, AE_UP),   UP(OE, OE_UP),   UP(O_CIR, O_CIR_UP), UM(SECT), _______,                 UP(O_SLSH, O_SLSH_UP), UM(MICRO), _______, OSL(EMOJI), UP(STAR, STAR_UP), UP(TIMES, TIMES_UP),
+  _______,  UP(A_GRV, A_GRV_UP), UP(E_GRV, E_GRV_UP), UP(E_ACU, E_ACU_UP), UP(E_CIR, E_CIR_UP), UP(A_CIR, A_CIR_UP),                UP(BOX_UR, BOX_UR_UP), UP(BOX_H, BOX_H_UP), UP(I_DIA, I_DIA_UP), UP(I_CIR, I_CIR_UP), UP(U_CIR, U_CIR_UP), UP(U_GRV, U_GRV_UP),
+  _______,  UP(LSAQ, LSAQ_UP), UP(CROSS, CROSS_UP), UP(C_CED, C_CED_UP), UP(RSAQ, RSAQ_UP), _______, _______, UM(CRARR), UP(MIDDOT, MIDDOT_UP), UP(ELLIP, ELLIP_UP), UM(DIAMOND), UP(DASH, DASH_UP), UP(CHECK, CHECK_UP), _______,
+                    UP(ARR_LR, ARR_LR_UP), UP(ARR_L, ARR_L_UP), UP(ARR_R, ARR_R_UP), _______, _______,   UM(NBSP), UP(ARR_UH, ARR_UH_UP), UP(ARR_U, ARR_U_UP), UP(ARR_D, ARR_D_UP), UP(ARR_DH, ARR_DH_UP)
+),
+/* EMOJI - 3dk, reached by tapping the dead key a second time.
+ * The ten keycap emoji of the Glove80 row are dropped: each is a three code
+ * point sequence and would need its own custom keycode.
+ * ,-----------------------------------------.                    ,-----------------------------------------.
+ * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
+ * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
+ * |      | Quest|  Bug |  Ok  | Palet| Wave |                    | Smile| Memo | iDea |      |Thumb |      |
+ * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
+ * |      | Alert| Spark| Eyes | iNfo | Pray |-------.    ,-------| Link | Recyc| Test | Point| Upside| Excl |
+ * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
+ * |      |  Zap |   X  | Cons | Verif| Warn |-------|    |-------| Robot| Hour | Gear |      | Kiss |      |
+ * `-----------------------------------------/       /     \      \-----------------------------------------'
+ *            |      | Left |Right |      | / picker/       \ voice\  |  Up  | Down |      |      |
+ *            `----------------------------------'           '------''---------------------------'
+ */
+[EMOJI] = LAYOUT_split_4x6_5(
+  _______, _______,  _______,  _______, _______,  _______,                 _______,  _______, _______, _______, _______, _______,
+  _______, UM(E_QUEST), UM(E_BUG), UM(E_OK), UM(E_ART), UM(E_WAVE),         EG_SMILE, UM(E_MEMO), UM(E_IDEA), _______, UM(E_THUMB), _______,
+  _______, UM(E_ALERT), UM(E_SPARK), UM(E_EYES), EG_INFO, UM(E_PRAY),       UM(E_LINK), EG_RECY, UM(E_TEST), EG_POINT, UM(E_UPSI), UM(E_EXCL),
+  _______, UM(E_ZAP), UM(E_X), UM(E_CONS), UM(E_VERIF), EG_WARN, _______, _______, UM(E_ROBOT), UM(E_HOUR), EG_GEAR, _______, UM(E_KISS), _______,
+                    _______, UM(E_LEFT), UM(E_RIGHT), _______, G(KC_COMM),   G(KC_H), _______, UM(E_UP), UM(E_DOWN), _______
 ),
 };
 
@@ -195,7 +299,8 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [BASE]  = { ENCODER_CCW_CW(KC_UP,   KC_DOWN), ENCODER_CCW_CW(KC_LEFT, KC_RGHT) },
     [NAV_NUM] = { ENCODER_CCW_CW(KC_WH_U, KC_WH_D), ENCODER_CCW_CW(KC_WH_L, KC_WH_R) },
     [RAISE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
-    [DK1] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) }
+    [DK1] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+    [EMOJI] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) }
 };
 #endif
 
@@ -546,6 +651,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case EG_DLR ... EG_MINS:
             if (record->event.pressed) {
                 tap_dual_glyph(&dual_glyphs[keycode - EG_DLR]);
+            }
+            return false;
+
+        // Emoji needing a U+FE0F variation selector: two code points, which a
+        // unicode_map entry cannot hold.
+        case EG_SMILE ... EG_GEAR:
+            if (record->event.pressed) {
+                static const char *const vs16_emoji[] = {
+                    "☺️", // white smiling face
+                    "ℹ️", // information source
+                    "♻️", // recycling symbol
+                    "☝️", // index pointing up
+                    "⚠️", // warning sign
+                    "⚙️", // gear
+                };
+                send_unicode_string(vs16_emoji[keycode - EG_SMILE]);
             }
             return false;
     }

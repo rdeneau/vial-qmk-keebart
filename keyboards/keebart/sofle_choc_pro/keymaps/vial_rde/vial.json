@@ -375,6 +375,36 @@
             "name": "EG_PSCR",
             "title": "PrtScr / hold NAV_NUM / double tap locks it",
             "shortName": "PrtScr"
+        },
+        {
+            "name": "EG_SMILE",
+            "title": "white smiling face emoji (U+263A U+FE0F)",
+            "shortName": "Smile"
+        },
+        {
+            "name": "EG_INFO",
+            "title": "information source emoji (U+2139 U+FE0F)",
+            "shortName": "iNfo"
+        },
+        {
+            "name": "EG_RECY",
+            "title": "recycling symbol emoji (U+267B U+FE0F)",
+            "shortName": "Recyc"
+        },
+        {
+            "name": "EG_POINT",
+            "title": "index pointing up emoji (U+261D U+FE0F)",
+            "shortName": "Point"
+        },
+        {
+            "name": "EG_WARN",
+            "title": "warning sign emoji (U+26A0 U+FE0F)",
+            "shortName": "Warn"
+        },
+        {
+            "name": "EG_GEAR",
+            "title": "gear emoji (U+2699 U+FE0F)",
+            "shortName": "Gear"
         }
     ]
 }
