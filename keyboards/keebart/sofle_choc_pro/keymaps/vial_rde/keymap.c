@@ -188,7 +188,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *      |------+------+------+------+------+------| Space |    | Enter |------+------+------+------+------+------|
  *   3  |LCtrl |   z  |   x  |   c  |   v  | ,  ; |-------|    |-------| .  : |   h  |   g  | -  _ |   k  |PrtScn|  8
  *      `-----------------------------------------/       /     \      \-----------------------------------------'
- *   4             | LGui | Left |Right | Del  | / Enter /       \Space \  | Bspc |  Up  | Down | RGui |            9
+ *   4             | LAlt | Left |Right | Del  | / Enter /       \Space \  | Bspc |  Up  | Down | RGui |            9
  *                 |      |      |      |      |/       /         \      \ |      |      |      |      |
  *                 `----------------------------------'           '------''---------------------------'
  *
@@ -203,30 +203,32 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,     KC_A,    KC_B,   KC_O,    KC_P,    KC_Z,                       KC_J, KC_SCLN,    KC_D, OSL(DK1),   KC_Y, KC_NUHS,
   KC_LSFT,    KC_Q,    KC_S,   KC_E,    KC_N,    KC_F,                       KC_L,    KC_R,    KC_T,    KC_I,    KC_U, KC_BSPC,
   KC_LCTL,    KC_W,    KC_X,   KC_C,    KC_V, EG_COMM,  KC_SPC,    KC_ENT, EG_DOT,    KC_H,    KC_G, EG_MINS,    KC_K, EG_PSCR,
-                    KC_LGUI, KC_LEFT, KC_RGHT, KC_DEL, KC_ENT,    KC_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
+                    KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, KC_ENT,    KC_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
 ),
 /* NAV_NUM - navigation, editing, numpad, F-keys
- * Ctrl shortcuts are written in AZERTY scancodes: Ctrl+Z (undo) is C(KC_W),
- * because the physical KC_Z key types 'w' on the host.
+ * Ctrl shortcuts are written in AZERTY scancodes: Ctrl+Z (undo) is C(KC_W) and
+ * Ctrl+A (select all) is C(KC_Q), because the host swaps those letter pairs.
+ * Esc leaves for BASE, the way out when a double tap on PrtScr locked the layer.
+ * No Num Lock key: it is on by default on the host.
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |      |  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F11  |
+ * | BASE |  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F11  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      | Redo | Home |  Up  | End  | PgUp |                    |  KP7 |  KP8 |  KP9 |  KP- |  KP/ | F12  |
+ * |      | Redo | Home |  Up  | End  | PgUp |                    |  KP/ |  KP7 |  KP8 |  KP9 |  KP* | F12  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      | Undo | Left | Down |Right | PgDn |-------.    ,-------|  KP4 |  KP5 |  KP6 |  KP+ |  KP* |      |
+ * |      | SelAl| Left | Down |Right | PgDn |-------.    ,-------|  KP- |  KP4 |  KP5 |  KP6 |  KP+ |      |
  * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
- * |      | Cut  | Copy |Paste |PasteT|      |-------|    |-------|  KP1 |  KP2 |  KP3 | KPEnt|  KP= |NumLck|
+ * |      | Undo | Cut  | Copy |Paste |PasteT|-------|    |-------|  KP. |  KP1 |  KP2 |  KP3 |  KP= |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            |      |      |      | Del  | / Bspc  /       \ KP0  \  | KP.  |      |      |      |
+ *            |      |      |      |      | /       /       \      \  | KP0  | KP0  | KP,  |KPEnt |
  *            |      |      |      |      |/       /         \      \ |      |      |      |      |
  *            `----------------------------------'           '------''---------------------------'
  */
 [NAV_NUM] = LAYOUT_split_4x6_5(
-  _______,   KC_F1,   KC_F2,   KC_F3,    KC_F4,    KC_F5,                    KC_F6,  KC_F7,  KC_F8,   KC_F9,  KC_F10,  KC_F11,
-  _______, C(KC_Y), KC_HOME,   KC_UP,   KC_END,  KC_PGUP,                    KC_P7,  KC_P8,  KC_P9, KC_PMNS, KC_PSLS,  KC_F12,
-  _______, C(KC_W), KC_LEFT, KC_DOWN,  KC_RGHT,  KC_PGDN,                    KC_P4,  KC_P5,  KC_P6, KC_PPLS, KC_PAST, _______,
-  _______, C(KC_X), C(KC_C), C(KC_V), G(C(A(KC_V))), _______, _______, _______, KC_P1, KC_P2, KC_P3, KC_PENT, KC_PEQL,  KC_NUM,
-                    _______, _______, _______, KC_DEL, KC_BSPC,    KC_P0, KC_PDOT, _______, _______, _______
+  TO(BASE),  KC_F1,   KC_F2,   KC_F3,    KC_F4,    KC_F5,                    KC_F6,  KC_F7,  KC_F8,   KC_F9,  KC_F10,  KC_F11,
+  _______, C(KC_Y), KC_HOME,   KC_UP,   KC_END,  KC_PGUP,                  KC_PSLS,  KC_P7,  KC_P8,   KC_P9, KC_PAST,  KC_F12,
+  _______, C(KC_Q), KC_LEFT, KC_DOWN,  KC_RGHT,  KC_PGDN,                  KC_PMNS,  KC_P4,  KC_P5,   KC_P6, KC_PPLS, _______,
+  _______, C(KC_W), C(KC_X), C(KC_C), C(KC_V), G(C(A(KC_V))), _______, _______, KC_PDOT, KC_P1, KC_P2, KC_P3, KC_PEQL, _______,
+                    _______, _______, _______, _______, _______,  _______, KC_P0, KC_P0, KC_PCMM, KC_PENT
 ),
 /* RAISE
  * ,----------------------------------------.                    ,-----------------------------------------.
@@ -266,7 +268,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|       |    | back  |------+------+------+------+------+------|
  * |      |  <   |  X   |  c,  |  >   |      |-------|    |-------|  .   | ...  | diam |  -   |  ok  |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            | <->  |  <-  |  ->  |      | /       /       \ NBSP \  |  ^^  |  up  | down |  vv  |
+ *            | <->  |  <-  |  ->  |      | / ret'd /       \ NBSP \  |  ^^  |  up  | down |  vv  |
  *            `----------------------------------'           '------''---------------------------'
  */
 [DK1] = LAYOUT_split_4x6_5(
@@ -274,7 +276,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,   UP(A_CIR, A_CIR_UP), UP(OE, OE_UP), UP(O_CIR, O_CIR_UP), UM(SECT), _______,                 UP(O_SLSH, O_SLSH_UP), UM(MICRO), _______, OSL(EMOJI), UP(STAR, STAR_UP), UP(TIMES, TIMES_UP),
   _______,  UP(A_GRV, A_GRV_UP), UP(E_GRV, E_GRV_UP), UP(E_ACU, E_ACU_UP), UP(E_CIR, E_CIR_UP), UP(AE, AE_UP),                UP(BOX_UR, BOX_UR_UP), UP(BOX_H, BOX_H_UP), UP(I_DIA, I_DIA_UP), UP(I_CIR, I_CIR_UP), UP(U_CIR, U_CIR_UP), UP(U_GRV, U_GRV_UP),
   _______,  UP(LSAQ, LSAQ_UP), UP(CROSS, CROSS_UP), UP(C_CED, C_CED_UP), UP(RSAQ, RSAQ_UP), _______, _______, UM(CRARR), UP(MIDDOT, MIDDOT_UP), UP(ELLIP, ELLIP_UP), UM(DIAMOND), UP(DASH, DASH_UP), UP(CHECK, CHECK_UP), _______,
-                    UP(ARR_LR, ARR_LR_UP), UP(ARR_L, ARR_L_UP), UP(ARR_R, ARR_R_UP), _______, _______,   UM(NBSP), UP(ARR_UH, ARR_UH_UP), UP(ARR_U, ARR_U_UP), UP(ARR_D, ARR_D_UP), UP(ARR_DH, ARR_DH_UP)
+                    UP(ARR_LR, ARR_LR_UP), UP(ARR_L, ARR_L_UP), UP(ARR_R, ARR_R_UP), _______, UM(CRARR),   UM(NBSP), UP(ARR_UH, ARR_UH_UP), UP(ARR_U, ARR_U_UP), UP(ARR_D, ARR_D_UP), UP(ARR_DH, ARR_DH_UP)
 ),
 /* EMOJI - 3dk, reached by tapping the dead key a second time.
  * The ten keycap emoji of the Glove80 row are dropped: each is a three code
@@ -288,7 +290,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
  * |      |  Zap |   X  | Cons | Verif| Warn |-------|    |-------| Robot| Hour | Gear |      | Kiss |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            |      | Left |Right |      | / picker/       \ voice\  |  Up  | Down |      |      |
+ *            |      | Left |Right |      | / picker/       \      \  |  Up  | Down |      | Menu |
  *            `----------------------------------'           '------''---------------------------'
  */
 [EMOJI] = LAYOUT_split_4x6_5(
@@ -296,7 +298,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______, UM(E_QUEST), UM(E_BUG), UM(E_OK), UM(E_ART), UM(E_WAVE),         EG_SMILE, UM(E_MEMO), UM(E_IDEA), _______, UM(E_THUMB), _______,
   _______, UM(E_ALERT), UM(E_SPARK), UM(E_EYES), EG_INFO, UM(E_PRAY),       UM(E_LINK), EG_RECY, UM(E_TEST), EG_POINT, UM(E_UPSI), UM(E_EXCL),
   _______, UM(E_ZAP), UM(E_X), UM(E_CONS), UM(E_VERIF), EG_WARN, _______, _______, UM(E_ROBOT), UM(E_HOUR), EG_GEAR, _______, UM(E_KISS), _______,
-                    _______, UM(E_LEFT), UM(E_RIGHT), _______, G(KC_COMM),   G(KC_H), _______, UM(E_UP), UM(E_DOWN), _______
+                    _______, UM(E_LEFT), UM(E_RIGHT), _______, G(KC_COMM),   _______, _______, UM(E_UP), UM(E_DOWN), KC_APP
 ),
 };
 
@@ -630,6 +632,14 @@ static void pscr_release(void) {
     } else {
         pscr.state = PSCR_IDLE;
     }
+}
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    // TO(BASE) on Esc, or any other exit, must not leave the lock flag set.
+    if (!(state & (1UL << NAV_NUM))) {
+        pscr.locked = false;
+    }
+    return state;
 }
 
 void matrix_scan_user(void) {
