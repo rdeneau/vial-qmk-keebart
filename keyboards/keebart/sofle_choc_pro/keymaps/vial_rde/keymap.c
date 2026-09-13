@@ -5,9 +5,64 @@
 #include "transactions.h"
 
 enum layers {
-    BASE,  // default layer
-    LOWER, // NAV layer
-    RAISE  // raise layer
+    BASE,   // default layer
+    LOWER,  // NAV layer
+    RAISE,  // raise layer
+    UNICODE // French accents, quotes, arrows
+};
+
+// Unicode map indices. Each pair is (lowercase/simple, uppercase/heavy); the
+// second one is emitted when Shift or Caps Word is active, via UP(i, j).
+enum unicode_names {
+    A_GRV, A_GRV_UP,   // a A with grave
+    A_CIR, A_CIR_UP,   // a A with circumflex
+    AE,    AE_UP,      // ae AE ligature
+    E_ACU, E_ACU_UP,   // e E with acute
+    E_GRV, E_GRV_UP,   // e E with grave
+    E_CIR, E_CIR_UP,   // e E with circumflex
+    I_CIR, I_CIR_UP,   // i I with circumflex
+    I_DIA, I_DIA_UP,   // i I with diaeresis
+    O_CIR, O_CIR_UP,   // o O with circumflex
+    OE,    OE_UP,      // oe OE ligature
+    U_GRV, U_GRV_UP,   // u U with grave
+    U_CIR, U_CIR_UP,   // u U with circumflex
+    C_CED, C_CED_UP,   // c C with cedilla
+    LAQUO, RAQUO,      // double angle quotes
+    RSQUO,             // typographic apostrophe
+    LSAQ,  RSAQ,       // single angle quotes
+    ARR_LR, ARR_LR_UP, // left-right arrow, single then double
+    ARR_L,  ARR_L_UP,  // left arrow
+    ARR_R,  ARR_R_UP,  // right arrow
+    ARR_U,  ARR_U_UP,  // up arrow
+    ARR_D,  ARR_D_UP,  // down arrow
+    CROSS,  CROSS_UP,  // ballot X, light then heavy
+    CHECK,  CHECK_UP   // check mark, light then heavy
+};
+
+const uint32_t PROGMEM unicode_map[] = {
+    [A_GRV]  = 0x00E0, [A_GRV_UP]  = 0x00C0, // a A
+    [A_CIR]  = 0x00E2, [A_CIR_UP]  = 0x00C2, // a A
+    [AE]     = 0x00E6, [AE_UP]     = 0x00C6, // ae AE
+    [E_ACU]  = 0x00E9, [E_ACU_UP]  = 0x00C9, // e E
+    [E_GRV]  = 0x00E8, [E_GRV_UP]  = 0x00C8, // e E
+    [E_CIR]  = 0x00EA, [E_CIR_UP]  = 0x00CA, // e E
+    [I_CIR]  = 0x00EE, [I_CIR_UP]  = 0x00CE, // i I
+    [I_DIA]  = 0x00EF, [I_DIA_UP]  = 0x00CF, // i I
+    [O_CIR]  = 0x00F4, [O_CIR_UP]  = 0x00D4, // o O
+    [OE]     = 0x0153, [OE_UP]     = 0x0152, // oe OE
+    [U_GRV]  = 0x00F9, [U_GRV_UP]  = 0x00D9, // u U
+    [U_CIR]  = 0x00FB, [U_CIR_UP]  = 0x00DB, // u U
+    [C_CED]  = 0x00E7, [C_CED_UP]  = 0x00C7, // c C
+    [LAQUO]  = 0x00AB, [RAQUO]     = 0x00BB, // << >>
+    [RSQUO]  = 0x2019,                       // '
+    [LSAQ]   = 0x2039, [RSAQ]      = 0x203A, // < >
+    [ARR_LR] = 0x2194, [ARR_LR_UP] = 0x21D4,
+    [ARR_L]  = 0x2190, [ARR_L_UP]  = 0x21D0,
+    [ARR_R]  = 0x2192, [ARR_R_UP]  = 0x21D2,
+    [ARR_U]  = 0x2191, [ARR_U_UP]  = 0x21D1,
+    [ARR_D]  = 0x2193, [ARR_D_UP]  = 0x21D3,
+    [CROSS]  = 0x2717, [CROSS_UP]  = 0x2716,
+    [CHECK]  = 0x2713, [CHECK_UP]  = 0x2714
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -23,7 +78,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *      |------+------+------+------+------+------|BrwBack|    | Calc  |------+------+------+------+------+------|
  *   3  | Caps |   Z  |   X  |   C  |   V  |   B  |-------|    |-------|   N  |   M  |   ,  |   .  |   /  |RShift|  8
  *      `-----------------------------------------/       /     \      \-----------------------------------------'
- *   4             | LGui | LAlt | NAV  | LCtrl| / Enter /       \Space \  |RCtrl | RAlt | Menu | RGui |            9
+ *   4             | LGui | LAlt | NAV  | LCtrl| / Enter /       \Space \  |RCtrl | RAlt | UNI  | RGui |            9
  *                 |      |      |      |      |/       /         \      \ |      |      |      |      |
  *                 `----------------------------------'           '------''---------------------------'
  */
@@ -33,7 +88,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                      KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,  KC_DEL,
   KC_LSFT,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                      KC_H,    KC_J,    KC_K,    KC_L, KC_SCLN, KC_BSPC,
   KC_CAPS,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B, KC_WBAK,    KC_CALC, KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RSFT,
-                 KC_LGUI, KC_LALT, TG(LOWER), KC_LCTL, KC_ENT,       KC_SPC, KC_RCTL, KC_RALT, KC_APP, KC_RGUI
+                 KC_LGUI, KC_LALT, TG(LOWER), KC_LCTL, KC_ENT,       KC_SPC, KC_RCTL, KC_RALT, MO(UNICODE), KC_RGUI
 ),
 /* LOWER - Navigation & Numpad
  * ,-----------------------------------------.                    ,-----------------------------------------.
@@ -77,13 +132,36 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______, C(KC_Z), C(KC_X), C(KC_C), C(KC_V), XXXXXXX,  _______,       _______,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,   XXXXXXX, _______,
                          _______, _______, _______, _______, _______,       _______, _______, _______, _______, _______
 ),
+/* UNICODE - French accents, quotes, arrows (hold the right thumb UNI key)
+ * Shift (or Caps Word) gives the uppercase / heavy counterpart.
+ * ,-----------------------------------------.                    ,-----------------------------------------.
+ * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
+ * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
+ * |      |  ae  |      |  e'  |  e`  |  e^  |                    |  u`  |  u^  |  i^  |  i:  |  o^  |  oe  |
+ * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
+ * |      |  a`  |  a^  |      |      |      |-------.    ,-------|  <<  |  >>  |  '   |  <   |  >   |      |
+ * |------+------+------+------+------+------|  BAL  |    | CHECK |------+------+------+------+------+------|
+ * |      |      |      |  c,  |      |      |-------|    |-------|  <-> |  <-  |  v   |  ^   |  ->  |      |
+ * `-----------------------------------------/       /     \      \-----------------------------------------'
+ *            |      |      |      |      | /       /       \      \  |      |      |      |      |
+ *            |      |      |      |      |/       /         \      \ |      |      |      |      |
+ *            `----------------------------------'           '------''---------------------------'
+ */
+[UNICODE] = LAYOUT_split_4x6_5(
+  _______, _______, _______, _______, _______, _______,                                        _______,     _______,    _______,     _______,    _______,    _______,
+  _______, UP(AE, AE_UP), _______, UP(E_ACU, E_ACU_UP), UP(E_GRV, E_GRV_UP), UP(E_CIR, E_CIR_UP),   UP(U_GRV, U_GRV_UP), UP(U_CIR, U_CIR_UP), UP(I_CIR, I_CIR_UP), UP(I_DIA, I_DIA_UP), UP(O_CIR, O_CIR_UP), UP(OE, OE_UP),
+  _______, UP(A_GRV, A_GRV_UP), UP(A_CIR, A_CIR_UP), _______, _______, _______,                 UM(LAQUO),   UM(RAQUO),  UM(RSQUO),   UM(LSAQ),   UM(RSAQ),   _______,
+  _______, _______, _______, UP(C_CED, C_CED_UP), _______, _______, UP(CROSS, CROSS_UP),   UP(CHECK, CHECK_UP), UP(ARR_LR, ARR_LR_UP), UP(ARR_L, ARR_L_UP), UP(ARR_D, ARR_D_UP), UP(ARR_U, ARR_U_UP), UP(ARR_R, ARR_R_UP), _______,
+                         _______, _______, _______, _______, _______,       _______, _______, _______, _______, _______
+),
 };
 
 #if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [BASE]  = { ENCODER_CCW_CW(KC_WH_L, KC_WH_R), ENCODER_CCW_CW(KC_WH_D, KC_WH_U) },
     [LOWER] = { ENCODER_CCW_CW(KC_LEFT, KC_RGHT), ENCODER_CCW_CW(KC_UP,   KC_DOWN) },
-    [RAISE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) }
+    [RAISE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+    [UNICODE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) }
 };
 #endif
 

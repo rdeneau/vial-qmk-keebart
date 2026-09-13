@@ -9,3 +9,9 @@
 
 // Split keyboard user transaction IDs
 #define SPLIT_TRANSACTION_IDS_USER RPC_ID_USER_STATE_SYNC
+
+// Unicode input - WinCompose on Windows.
+// The compose key is moved off Right Alt so AltGr stays usable on the AZERTY
+// host layout. WinCompose must be configured with the same key (Scroll Lock).
+#define UNICODE_SELECTED_MODES UNICODE_MODE_WINCOMPOSE
+#define UNICODE_KEY_WINC KC_SCROLL_LOCK
