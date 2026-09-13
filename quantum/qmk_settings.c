@@ -321,7 +321,10 @@ bool get_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
             if (!QS_auto_shift_no_auto_shift_special) return true;
             break;
     }
-    return false;
+    // Fall back to the keymap hook, as the weak default in process_auto_shift.c
+    // does. Without this, overriding get_custom_auto_shifted_key() has no
+    // effect whenever QMK_SETTINGS is enabled.
+    return get_custom_auto_shifted_key(keycode, record);
 }
 
 bool get_auto_shift_repeat(uint16_t keycode, keyrecord_t *record) {

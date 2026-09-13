@@ -543,7 +543,7 @@ static uint16_t apply_caps_lock_digit_row(uint16_t keycode) {
     return keycode ^ QK_LSFT;
 }
 
-static void tap_dual_glyph(const dual_glyph_t *pair) {
+static bool dual_glyph_wants_shift(const dual_glyph_t *pair) {
     // These keys never reach process_caps_word (process_record_user consumes
     // them first), so Caps Word survives on its own. But its pending weak shift
     // would flip the glyph to the digit mid-word. Drop it, except on EG_MINS
@@ -557,9 +557,12 @@ static void tap_dual_glyph(const dual_glyph_t *pair) {
 #ifndef NO_ACTION_ONESHOT
     mods |= get_oneshot_mods();
 #endif
-    bool caps = host_keyboard_led_state().caps_lock;
     // Same rule as unicodemap_index(): Shift XOR Caps Lock picks the second glyph.
-    bool want_shifted = ((mods & MOD_MASK_SHIFT) != 0) ^ caps;
+    return ((mods & MOD_MASK_SHIFT) != 0) ^ host_keyboard_led_state().caps_lock;
+}
+
+static void tap_dual_glyph(const dual_glyph_t *pair, bool want_shifted) {
+    bool caps = host_keyboard_led_state().caps_lock;
 
     uint16_t keycode = want_shifted ? pair->shifted : pair->unshifted;
     if (caps) {
@@ -636,6 +639,55 @@ void matrix_scan_user(void) {
     }
 }
 
+// Auto Shift -----------------------------------------------------------------
+//
+// Hold reaches the 2dk counterpart on the dead-key layer. Vial's qmk_settings.c
+// replaces get_auto_shifted_key() and, unpatched, never calls this hook; the
+// fork carries a one-line fix restoring that fallback.
+//
+// process_record_user runs at quantum.c:364, process_auto_shift at :411, so the
+// EG_* keys only reach Auto Shift because their case below yields to it while
+// it is enabled.
+
+bool get_custom_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
+    return IS_QK_UNICODEMAP_PAIR(keycode) || (keycode >= EG_DLR && keycode <= EG_MINS);
+}
+
+void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
+    if (IS_QK_UNICODEMAP_PAIR(keycode)) {
+        // register_code16() would bypass process_unicodemap and send the raw
+        // keycode, so drive the unicode map directly. unicodemap_index() reads
+        // the shift state, hence the weak mod around it.
+        if (shifted) {
+            add_weak_mods(MOD_BIT(KC_LSFT));
+        }
+        register_unicodemap(unicodemap_index(keycode));
+        if (shifted) {
+            del_weak_mods(MOD_BIT(KC_LSFT));
+        }
+        return;
+    }
+    if (keycode >= EG_DLR && keycode <= EG_MINS) {
+        const dual_glyph_t *pair = &dual_glyphs[keycode - EG_DLR];
+        // Hold reaches the digit, and so do Shift and Caps Lock: either is
+        // enough, so the two decisions are OR-ed rather than XOR-ed.
+        tap_dual_glyph(pair, shifted || dual_glyph_wants_shift(pair));
+        return;
+    }
+    if (shifted) {
+        add_weak_mods(MOD_BIT(KC_LSFT));
+    }
+    register_code16((IS_RETRO(keycode)) ? keycode & 0xFF : keycode);
+}
+
+void autoshift_release_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
+    // Both branches above type and release in one go, nothing stays held.
+    if (IS_QK_UNICODEMAP_PAIR(keycode) || (keycode >= EG_DLR && keycode <= EG_MINS)) {
+        return;
+    }
+    unregister_code16((IS_RETRO(keycode)) ? keycode & 0xFF : keycode);
+}
+
 // Process key presses
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
@@ -655,8 +707,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case EG_DLR ... EG_MINS:
+            // Yield to Auto Shift when it is on, so holding reaches the digit.
+            // It is consulted later in the chain and would never see these keys
+            // otherwise. When it is off, type the glyph here instead.
+            if (get_autoshift_state()) {
+                return true;
+            }
             if (record->event.pressed) {
-                tap_dual_glyph(&dual_glyphs[keycode - EG_DLR]);
+                const dual_glyph_t *pair = &dual_glyphs[keycode - EG_DLR];
+                tap_dual_glyph(pair, dual_glyph_wants_shift(pair));
             }
             return false;
 
