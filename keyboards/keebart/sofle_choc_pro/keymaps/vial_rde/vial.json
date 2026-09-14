@@ -352,9 +352,9 @@
             "shortName": "#\n9"
         },
         {
-            "name": "EG_SLSH",
-            "title": "/ / 0 (shift or caps lock)",
-            "shortName": "/\n0"
+            "name": "EG_DEG",
+            "title": "degree / 0 (shift or caps lock)",
+            "shortName": "°\n0"
         },
         {
             "name": "EG_COMM",
@@ -410,6 +410,86 @@
             "name": "EG_SPC",
             "title": "space, hold reaches SYMBOL, double tap locks it",
             "shortName": "Spc"
+        },
+        {
+            "name": "EG_QUES",
+            "title": "? / ! (shift or caps lock)",
+            "shortName": "?\n!"
+        },
+        {
+            "name": "EG_CIRC",
+            "title": "circumflex, one tap (AltGr+9 then space)",
+            "shortName": "^"
+        },
+        {
+            "name": "EG_TILD",
+            "title": "tilde, one tap (AltGr+2 then space)",
+            "shortName": "~"
+        },
+        {
+            "name": "EG_KC1",
+            "title": "keycap 1 emoji (U+0031 U+FE0F U+20E3)",
+            "shortName": "KC 1"
+        },
+        {
+            "name": "EG_KC2",
+            "title": "keycap 2 emoji (U+0032 U+FE0F U+20E3)",
+            "shortName": "KC 2"
+        },
+        {
+            "name": "EG_KC3",
+            "title": "keycap 3 emoji (U+0033 U+FE0F U+20E3)",
+            "shortName": "KC 3"
+        },
+        {
+            "name": "EG_KC4",
+            "title": "keycap 4 emoji (U+0034 U+FE0F U+20E3)",
+            "shortName": "KC 4"
+        },
+        {
+            "name": "EG_KC5",
+            "title": "keycap 5 emoji (U+0035 U+FE0F U+20E3)",
+            "shortName": "KC 5"
+        },
+        {
+            "name": "EG_KC6",
+            "title": "keycap 6 emoji (U+0036 U+FE0F U+20E3)",
+            "shortName": "KC 6"
+        },
+        {
+            "name": "EG_KC7",
+            "title": "keycap 7 emoji (U+0037 U+FE0F U+20E3)",
+            "shortName": "KC 7"
+        },
+        {
+            "name": "EG_KC8",
+            "title": "keycap 8 emoji (U+0038 U+FE0F U+20E3)",
+            "shortName": "KC 8"
+        },
+        {
+            "name": "EG_KC9",
+            "title": "keycap 9 emoji (U+0039 U+FE0F U+20E3)",
+            "shortName": "KC 9"
+        },
+        {
+            "name": "EG_KC0",
+            "title": "keycap 0 emoji (U+0030 U+FE0F U+20E3)",
+            "shortName": "KC 0"
+        },
+        {
+            "name": "EG_KCAST",
+            "title": "keycap asterisk emoji (U+002A U+FE0F U+20E3)",
+            "shortName": "KC *"
+        },
+        {
+            "name": "EG_ARRL",
+            "title": "black left-pointing triangle emoji (U+25C0 U+FE0F)",
+            "shortName": "Tri L"
+        },
+        {
+            "name": "EG_ARRR",
+            "title": "black right-pointing triangle emoji (U+25B6 U+FE0F)",
+            "shortName": "Tri R"
         }
     ]
 }

@@ -36,7 +36,7 @@ enum custom_keycodes {
     EG_RPRN,             // ) 7
     EG_AT,               // @ 8
     EG_HASH,             // # 9
-    EG_SLSH,             // / 0
+    EG_DEG,              // deg 0
     EG_COMM,             // , ;
     EG_DOT,              // . :
     EG_MINS,             // - _
@@ -50,7 +50,21 @@ enum custom_keycodes {
     EG_WARN,             // warning sign
     EG_GEAR,             // gear
     // Space: tap types a space, hold reaches SYMBOL, double tap locks it.
-    EG_SPC
+    EG_SPC,
+    // Everything below is appended, never inserted: the eighteen keycodes above
+    // are addressed by index in the .vil exports, and reordering them would
+    // silently rewrite a saved layout.
+    EG_QUES,             // ? !
+    // AltGr+9 and AltGr+2 are dead on AZERTY; a trailing space makes them
+    // literal, so one tap is enough. The backtick keeps its dead behaviour.
+    EG_CIRC,             // ^
+    EG_TILD,             // ~
+    // Keycap emoji: digit, U+FE0F, U+20E3 - three code points each.
+    EG_KC1, EG_KC2, EG_KC3, EG_KC4, EG_KC5,
+    EG_KC6, EG_KC7, EG_KC8, EG_KC9, EG_KC0,
+    EG_KCAST,            // keycap asterisk
+    EG_ARRL,             // black left-pointing triangle
+    EG_ARRR              // black right-pointing triangle
 };
 
 // Unicode map, transcribed from ergol-r_moergo.json (layers 1dk / 2dk /
@@ -59,7 +73,6 @@ enum custom_keycodes {
 enum unicode_names {
     LAQUO,    LAQUO_UP,    // << / heavy left quote
     RAQUO,    RAQUO_UP,    // >> / heavy right quote
-    SHARP,    SHARP_UP,    // music sharp / plus-minus
     NEQ,      NEQ_UP,      // not equal / almost equal
     AE,       AE_UP,       // ae ligature
     OE,       OE_UP,       // oe ligature
@@ -94,18 +107,19 @@ enum unicode_names {
     ARR_UH,   ARR_UH_UP,   // up arrowhead / up triangle
     ARR_DH,   ARR_DH_UP,   // down arrowhead / down triangle
     // 1dk characters with no 2dk counterpart
-    SUP2, CURREN, RSQUO, DEGREE, DIVIDE, SECT, MICRO, CRARR, NBSP, DIAMOND,
+    SUP2, CURREN, RSQUO, PERMIL, DIVIDE, SECT, MICRO, CRARR, NBSP, DIAMOND,
+    SHARP, PLUSMIN, PILCROW,
     // Emoji layer, single code point only
     E_QUEST, E_BUG, E_OK, E_ART, E_WAVE, E_MEMO, E_IDEA,
     E_THUMB, E_ALERT, E_SPARK, E_EYES, E_PRAY, E_LINK, E_TEST,
     E_UPSI, E_EXCL, E_ZAP, E_X, E_CONS, E_VERIF, E_ROBOT,
-    E_HOUR, E_KISS, E_LEFT, E_RIGHT, E_UP, E_DOWN
+    E_HOUR, E_KISS, E_LEFT, E_RIGHT, E_UP, E_DOWN,
+    E_STAR, E_MINUS, E_PLUS, E_SHIP, E_BROOM
 };
 
 const uint32_t PROGMEM unicode_map[] = {
     [LAQUO]    = 0x00AB, [LAQUO_UP]    = 0x275D, // << / heavy left quote
     [RAQUO]    = 0x00BB, [RAQUO_UP]    = 0x275E, // >> / heavy right quote
-    [SHARP]    = 0x266F, [SHARP_UP]    = 0x00B1, // music sharp / plus-minus
     [NEQ]      = 0x2260, [NEQ_UP]      = 0x2248, // not equal / almost equal
     [AE]       = 0x00E6, [AE_UP]       = 0x00C6, // ae ligature
     [OE]       = 0x0153, [OE_UP]       = 0x0152, // oe ligature
@@ -142,13 +156,16 @@ const uint32_t PROGMEM unicode_map[] = {
     [SUP2]     = 0x00B2,                       // superscript two
     [CURREN]   = 0x00A4,                       // currency sign
     [RSQUO]    = 0x2019,                       // typographic apostrophe
-    [DEGREE]   = 0x00B0,                       // degree sign
+    [PERMIL]   = 0x2030,                       // per mille sign
     [DIVIDE]   = 0x00F7,                       // division sign
     [SECT]     = 0x00A7,                       // section sign
     [MICRO]    = 0x00B5,                       // micro sign
     [CRARR]    = 0x21A9,                       // carriage return arrow
     [NBSP]     = 0x00A0,                       // no-break space
     [DIAMOND]  = 0x25C6,                       // black diamond
+    [SHARP]    = 0x266F,                       // music sharp sign
+    [PLUSMIN]  = 0x00B1,                       // plus-minus sign
+    [PILCROW]  = 0x00B6,                       // pilcrow sign
     [E_QUEST]  = 0x2753,                      // question
     [E_BUG]    = 0x1F41B,                      // bug
     [E_OK]     = 0x1F44C,                      // ok hand
@@ -175,7 +192,12 @@ const uint32_t PROGMEM unicode_map[] = {
     [E_LEFT]   = 0x1F448,                      // point left
     [E_RIGHT]  = 0x1F449,                      // point right
     [E_UP]     = 0x1F446,                      // point up
-    [E_DOWN]   = 0x1F447                       // point down
+    [E_DOWN]   = 0x1F447,                      // point down
+    [E_STAR]   = 0x2B50,                      // star
+    [E_MINUS]  = 0x2796,                      // heavy minus sign
+    [E_PLUS]   = 0x2795,                      // heavy plus sign
+    [E_SHIP]   = 0x1F6A2,                      // ship
+    [E_BROOM]  = 0x1F9F9                       // broom
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -183,11 +205,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * BASE - Ergol-R (glyphs as rendered by the French AZERTY host)
  * ColL ->  0      1      2      3      4      5                           5      4      3      2      1      0 <- ColR
  * RowL ,-----------------------------------------.                    ,-----------------------------------------. RowR
- *   0  | Esc  | $  1 | EUR2 | "  3 | '  4 | %  5 |                    | (  6 | )  7 | @  8 | #  9 | /  0 | =  + |  5
+ *   0  | Esc  | $  1 | EUR2 | "  3 | '  4 | %  5 |                    | (  6 | )  7 | @  8 | #  9 | deg0 | =  + |  5
  *      |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  *   1  | Tab  |   q  |   b  |   o  |   p  |   w  |                    |   j  |   m  |   d  | 1dk  |   y  | *  u |  6
  *      |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- *   2  |LShift|   a  |   s  |   e  |   n  |   f  |-------.    ,-------|   l  |   r  |   t  |   i  |   u  | Bspc |  7
+ *   2  |LShift|   a  |   s  |   e  |   n  |   f  |-------.    ,-------|   l  |   r  |   t  |   i  |   u  | ?  ! |  7
  *      |------+------+------+------+------+------| Space |    | Enter |------+------+------+------+------+------|
  *   3  |LCtrl |   z  |   x  |   c  |   v  | ,  ; |-------|    |-------| .  : |   h  |   g  | -  _ |   k  |PrtScn|  8
  *      `-----------------------------------------/       /     \      \-----------------------------------------'
@@ -202,9 +224,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 
 [BASE] = LAYOUT_split_4x6_5(
-  KC_ESC,   EG_DLR,  EG_EUR,   KC_3,    KC_4,  EG_PCT,                    EG_LPRN, EG_RPRN,   EG_AT, EG_HASH, EG_SLSH,  KC_EQL,
+  KC_ESC,   EG_DLR,  EG_EUR,   KC_3,    KC_4,  EG_PCT,                    EG_LPRN, EG_RPRN,   EG_AT, EG_HASH,  EG_DEG,  KC_EQL,
   KC_TAB,     KC_A,    KC_B,   KC_O,    KC_P,    KC_Z,                       KC_J, KC_SCLN,    KC_D, OSL(DK1),   KC_Y, KC_NUHS,
-  KC_LSFT,    KC_Q,    KC_S,   KC_E,    KC_N,    KC_F,                       KC_L,    KC_R,    KC_T,    KC_I,    KC_U, KC_BSPC,
+  KC_LSFT,    KC_Q,    KC_S,   KC_E,    KC_N,    KC_F,                       KC_L,    KC_R,    KC_T,    KC_I,    KC_U, EG_QUES,
   KC_LCTL,    KC_W,    KC_X,   KC_C,    KC_V, EG_COMM,  KC_SPC,    KC_ENT, EG_DOT,    KC_H,    KC_G, EG_MINS,    KC_K, EG_PSCR,
                     KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, KC_ENT,    EG_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
 ),
@@ -254,7 +276,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [SYMBOL] = LAYOUT_split_4x6_5(
   TO(BASE), _______, ALGR(KC_4), ALGR(KC_EQL), _______, _______,             _______,     _______, _______, _______, _______,  _______,
-  _______, ALGR(KC_5), KC_5, KC_MINS, ALGR(KC_MINS), _______,             ALGR(KC_2), ALGR(KC_9), _______, _______, _______, S(KC_M),
+  _______, ALGR(KC_5), KC_5, KC_MINS, ALGR(KC_MINS), _______,                EG_TILD,    EG_CIRC, _______, _______, _______, S(KC_M),
   _______, KC_NUBS, KC_PEQL, KC_PMNS, S(KC_NUBS), KC_M,                      KC_PDOT,   KC_PSLS, _______, _______, _______, KC_SLSH,
   _______, KC_1, ALGR(KC_6), S(KC_EQL), KC_PAST, KC_COMM, _______, _______,   KC_DOT, ALGR(KC_8), ALGR(KC_7), _______, _______, _______,
                     _______, _______, KC_8, _______, _______,    _______, _______, _______, _______, _______
@@ -268,9 +290,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * Tapping the dead key again reaches the emoji layer, as the third tap does on
  * the Glove80.
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |  2   |  o/  |  <<  |  >>  |  '   |  deg |                    |      |      |      |  #   |  div |  !=  |
+ * |  2   |  o/  |  <<  |  >>  |  '   | 0/00 |                    |      |      |      | shrp |  +-  |  !=  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Tab  |  a^  |  oe  |  o^  |  par |      |                    |  o/  |  mu  |      |EMOJI |  *   |  x   |
+ * | Tab  |  a^  |  oe  |  o^  |  par |  pil |                    |  o/  |  mu  | div  |EMOJI |  *   |  x   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |  a`  |  e`  |  e'  |  e^  |  ae  |-------.    ,-------|  |_  |  --  |  i:  |  i^  |  u^  |  u`  |
  * |------+------+------+------+------+------|       |    | back  |------+------+------+------+------+------|
@@ -280,33 +302,33 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *            `----------------------------------'           '------''---------------------------'
  */
 [DK1] = LAYOUT_split_4x6_5(
-  UM(SUP2), UM(CURREN), UP(LAQUO, LAQUO_UP), UP(RAQUO, RAQUO_UP), UM(RSQUO), UM(DEGREE),        _______, _______, _______, UP(SHARP, SHARP_UP), UM(DIVIDE), UP(NEQ, NEQ_UP),
-  KC_TAB,   UP(A_CIR, A_CIR_UP), UP(OE, OE_UP), UP(O_CIR, O_CIR_UP), UM(SECT), _______,                 UP(O_SLSH, O_SLSH_UP), UM(MICRO), _______, OSL(EMOJI), UP(STAR, STAR_UP), UP(TIMES, TIMES_UP),
+  UM(SUP2), UM(CURREN), UP(LAQUO, LAQUO_UP), UP(RAQUO, RAQUO_UP), UM(RSQUO), UM(PERMIL),        _______, _______, _______, UM(SHARP), UM(PLUSMIN), UP(NEQ, NEQ_UP),
+  KC_TAB,   UP(A_CIR, A_CIR_UP), UP(OE, OE_UP), UP(O_CIR, O_CIR_UP), UM(SECT), UM(PILCROW),             UP(O_SLSH, O_SLSH_UP), UM(MICRO), UM(DIVIDE), OSL(EMOJI), UP(STAR, STAR_UP), UP(TIMES, TIMES_UP),
   _______,  UP(A_GRV, A_GRV_UP), UP(E_GRV, E_GRV_UP), UP(E_ACU, E_ACU_UP), UP(E_CIR, E_CIR_UP), UP(AE, AE_UP),                UP(BOX_UR, BOX_UR_UP), UP(BOX_H, BOX_H_UP), UP(I_DIA, I_DIA_UP), UP(I_CIR, I_CIR_UP), UP(U_CIR, U_CIR_UP), UP(U_GRV, U_GRV_UP),
   _______,  UP(LSAQ, LSAQ_UP), UP(CROSS, CROSS_UP), UP(C_CED, C_CED_UP), UP(RSAQ, RSAQ_UP), _______, _______, UM(CRARR), UP(MIDDOT, MIDDOT_UP), UP(ELLIP, ELLIP_UP), UM(DIAMOND), UP(DASH, DASH_UP), UP(CHECK, CHECK_UP), _______,
                     UP(ARR_LR, ARR_LR_UP), UP(ARR_L, ARR_L_UP), UP(ARR_R, ARR_R_UP), _______, UM(CRARR),   UM(NBSP), UP(ARR_UH, ARR_UH_UP), UP(ARR_U, ARR_U_UP), UP(ARR_D, ARR_D_UP), UP(ARR_DH, ARR_DH_UP)
 ),
 /* EMOJI - 3dk, reached by tapping the dead key a second time.
- * The ten keycap emoji of the Glove80 row are dropped: each is a three code
- * point sequence and would need its own custom keycode.
+ * The digit row carries the keycap emoji: three code points each, so they get
+ * their own custom keycodes instead of a unicode_map entry.
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
+ * |      | KC 1 | KC 2 | KC 3 | KC 4 | KC 5 |                    | KC 6 | KC 7 | KC 8 | KC 9 | KC 0 | Plus |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      | Quest|  Bug |  Ok  | Palet| Wave |                    | Smile| Memo | iDea |      |Thumb |      |
+ * |      | Quest|  Bug |  Ok  | Palet| Wave |                    | Smile| Memo | iDea | Star |Thumb | KC * |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      | Alert| Spark| Eyes | iNfo | Pray |-------.    ,-------| Link | Recyc| Test | Point| Upside| Excl |
  * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
- * |      |  Zap |   X  | Cons | Verif| Warn |-------|    |-------| Robot| Hour | Gear |      | Kiss |      |
+ * |      |  Zap |   X  | Cons | Verif| Warn |-------|    |-------| Robot| Hour | Gear | Minus| Kiss |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            |      | Left |Right |      | / picker/       \      \  |  Up  | Down |      | Menu |
+ *            | LTri | Left |Right | RTri | / picker/       \ Ship \  | Broom|  Up  | Down | Menu |
  *            `----------------------------------'           '------''---------------------------'
  */
 [EMOJI] = LAYOUT_split_4x6_5(
-  _______, _______,  _______,  _______, _______,  _______,                 _______,  _______, _______, _______, _______, _______,
-  _______, UM(E_QUEST), UM(E_BUG), UM(E_OK), UM(E_ART), UM(E_WAVE),         EG_SMILE, UM(E_MEMO), UM(E_IDEA), _______, UM(E_THUMB), _______,
+  _______,  EG_KC1,   EG_KC2,   EG_KC3,  EG_KC4,   EG_KC5,                   EG_KC6,   EG_KC7,  EG_KC8,  EG_KC9,  EG_KC0, UM(E_PLUS),
+  _______, UM(E_QUEST), UM(E_BUG), UM(E_OK), UM(E_ART), UM(E_WAVE),         EG_SMILE, UM(E_MEMO), UM(E_IDEA), UM(E_STAR), UM(E_THUMB), EG_KCAST,
   _______, UM(E_ALERT), UM(E_SPARK), UM(E_EYES), EG_INFO, UM(E_PRAY),       UM(E_LINK), EG_RECY, UM(E_TEST), EG_POINT, UM(E_UPSI), UM(E_EXCL),
-  _______, UM(E_ZAP), UM(E_X), UM(E_CONS), UM(E_VERIF), EG_WARN, _______, _______, UM(E_ROBOT), UM(E_HOUR), EG_GEAR, _______, UM(E_KISS), _______,
-                    _______, UM(E_LEFT), UM(E_RIGHT), _______, G(KC_COMM),   _______, _______, UM(E_UP), UM(E_DOWN), KC_APP
+  _______, UM(E_ZAP), UM(E_X), UM(E_CONS), UM(E_VERIF), EG_WARN, KC_NO, KC_NO, UM(E_ROBOT), UM(E_HOUR), EG_GEAR, UM(E_MINUS), UM(E_KISS), KC_NO,
+                    EG_ARRL, UM(E_LEFT), UM(E_RIGHT), EG_ARRR, G(KC_COMM),   UM(E_SHIP), UM(E_BROOM), UM(E_UP), UM(E_DOWN), KC_APP
 ),
 };
 
@@ -492,14 +514,24 @@ static const dual_glyph_t dual_glyphs[] = {
     {EG_RPRN, KC_MINS,          LSFT(KC_7)}, // ) 7
     {EG_AT,   RALT(KC_0),       LSFT(KC_8)}, // @ 8
     {EG_HASH, RALT(KC_3),       LSFT(KC_9)}, // # 9
-    {EG_SLSH, LSFT(KC_DOT),     LSFT(KC_0)}, // / 0
+    {EG_DEG,  LSFT(KC_MINS),    LSFT(KC_0)}, // deg 0
     {EG_COMM, KC_M,             KC_COMM},    // , ;
     {EG_DOT,  LSFT(KC_COMM),    KC_DOT},     // . :
     {EG_MINS, KC_6,             KC_8},       // - _
+    // Appended out of enum order, hence the lookup by keycode below.
+    {EG_QUES, LSFT(KC_M),       KC_SLSH},    // ? !
 };
 
-_Static_assert(ARRAY_SIZE(dual_glyphs) == EG_PSCR - EG_DLR,
-               "dual_glyphs[] must stay aligned with the EG_* enum order");
+// The pairs no longer form one contiguous keycode range, so they are found by
+// keycode rather than indexed. Twelve entries: a scan costs nothing.
+static const dual_glyph_t *dual_glyph_for(uint16_t keycode) {
+    for (uint8_t i = 0; i < ARRAY_SIZE(dual_glyphs); i++) {
+        if (dual_glyphs[i].keycode == keycode) {
+            return &dual_glyphs[i];
+        }
+    }
+    return NULL;
+}
 
 // The French Windows layout already inverts the digit row under Caps Lock
 // (KC_1 alone types '1'). Undo that so the pair above stays literal.
@@ -689,12 +721,12 @@ void matrix_scan_user(void) {
 // which consumes the key before either of those runs.
 
 bool get_custom_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
-    return keycode >= EG_DLR && keycode <= EG_MINS;
+    return dual_glyph_for(keycode) != NULL;
 }
 
 void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
-    if (keycode >= EG_DLR && keycode <= EG_MINS) {
-        const dual_glyph_t *pair = &dual_glyphs[keycode - EG_DLR];
+    const dual_glyph_t *pair = dual_glyph_for(keycode);
+    if (pair != NULL) {
         // Hold reaches the digit, and so do Shift and Caps Lock: either is
         // enough, so the two decisions are OR-ed rather than XOR-ed.
         tap_dual_glyph(pair, shifted || dual_glyph_wants_shift(pair));
@@ -708,15 +740,74 @@ void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
 
 void autoshift_release_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
     // The branch above types and releases in one go, nothing stays held.
-    if (keycode >= EG_DLR && keycode <= EG_MINS) {
+    if (dual_glyph_for(keycode) != NULL) {
         return;
     }
     unregister_code16((IS_RETRO(keycode)) ? keycode & 0xFF : keycode);
 }
 
+// Double tap on Shift toggles Caps Lock -------------------------------------
+//
+// A tap is a press and release with no other key in between, inside the
+// tapping term. Two of them in a row switch Caps Lock on; once it is on, a
+// single tap switches it back off, so unlocking never needs the double tap.
+static struct {
+    uint16_t press_timer; // when the current Shift press started
+    uint16_t tap_timer;   // when the last completed tap ended
+    bool     held;
+    bool     used;        // another key was pressed while Shift was down
+    bool     tapped;      // one tap is already waiting for its twin
+} sft = {0, 0, false, false, false};
+
+static void shift_tap_toggle_caps(void) {
+    // Shift is still registered at this point in the chain: Caps Lock must not
+    // reach the host shifted.
+    uint8_t saved_mods = get_mods();
+    del_mods(MOD_MASK_SHIFT);
+    send_keyboard_report();
+    tap_code(KC_CAPS);
+    set_mods(saved_mods);
+    send_keyboard_report();
+}
+
+static void shift_double_tap(keyrecord_t *record) {
+    if (record->event.pressed) {
+        sft.held        = true;
+        sft.used        = false;
+        sft.press_timer = timer_read();
+        return;
+    }
+
+    sft.held = false;
+    if (sft.used || timer_elapsed(sft.press_timer) >= TAPPING_TERM) {
+        sft.tapped = false; // a hold, or a Shift used as a modifier
+        return;
+    }
+    if (host_keyboard_led_state().caps_lock) {
+        shift_tap_toggle_caps();
+        sft.tapped = false;
+        return;
+    }
+    if (sft.tapped && timer_elapsed(sft.tap_timer) < TAPPING_TERM) {
+        shift_tap_toggle_caps();
+        sft.tapped = false;
+        return;
+    }
+    sft.tapped    = true;
+    sft.tap_timer = timer_read();
+}
+
 // Process key presses
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed && sft.held && keycode != KC_LSFT) {
+        sft.used = true; // Shift is doing its usual job, not being tapped
+    }
+
     switch (keycode) {
+        case KC_LSFT:
+            shift_double_tap(record);
+            return true; // Shift keeps working as a modifier
+
         case KC_O:
             if (record->event.pressed) {
                 // Toggle O key color state when pressed
@@ -749,6 +840,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
 
         case EG_DLR ... EG_MINS:
+        case EG_QUES:
             // Yield to Auto Shift when it is on, so holding reaches the digit.
             // It is consulted later in the chain and would never see these keys
             // otherwise. When it is off, type the glyph here instead.
@@ -756,8 +848,33 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return true;
             }
             if (record->event.pressed) {
-                const dual_glyph_t *pair = &dual_glyphs[keycode - EG_DLR];
+                const dual_glyph_t *pair = dual_glyph_for(keycode);
                 tap_dual_glyph(pair, dual_glyph_wants_shift(pair));
+            }
+            return false;
+
+        // AltGr+9 and AltGr+2 are dead keys on AZERTY: the trailing space is
+        // what makes the accent literal, so one tap types one character.
+        case EG_CIRC:
+        case EG_TILD:
+            if (record->event.pressed) {
+                tap_code16(keycode == EG_CIRC ? ALGR(KC_9) : ALGR(KC_2));
+                tap_code(KC_SPC);
+            }
+            return false;
+
+        // Keycap emoji and the two pointing triangles: more code points than a
+        // unicode_map entry can hold.
+        case EG_KC1 ... EG_ARRR:
+            if (record->event.pressed) {
+                static const char *const sequences[] = {
+                    "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣",
+                    "6️⃣", "7️⃣", "8️⃣", "9️⃣", "0️⃣",
+                    "*️⃣", // keycap asterisk
+                    "◀️",  // black left-pointing triangle
+                    "▶️",  // black right-pointing triangle
+                };
+                send_unicode_string(sequences[keycode - EG_KC1]);
             }
             return false;
 
