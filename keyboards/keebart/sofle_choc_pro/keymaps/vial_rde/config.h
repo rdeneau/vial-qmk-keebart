@@ -7,9 +7,6 @@
 #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
 #define RGB_MATRIX_DEFAULT_VAL 19  // Brightness 7.5/100 (19/255)
 
-// Split keyboard user transaction IDs
-#define SPLIT_TRANSACTION_IDS_USER RPC_ID_USER_STATE_SYNC
-
 // Unicode input - WinCompose on Windows.
 // The compose key is moved off Right Alt so AltGr stays usable on the AZERTY
 // host layout. WinCompose must be configured with the same key (Scroll Lock).
