@@ -50,11 +50,7 @@ enum custom_keycodes {
     EG_WARN,             // warning sign
     EG_GEAR,             // gear
     // Space: tap types a space, hold reaches SYMBOL, double tap locks it.
-    EG_SPC,
-    // AltGr+7 is a dead backtick on AZERTY, so each needs its own sequence.
-    EG_BTK1,             // one backtick
-    EG_BTK2,             // a pair, caret left between them
-    EG_BTK3              // a fenced code block
+    EG_SPC
 };
 
 // Unicode map, transcribed from ergol-r_moergo.json (layers 1dk / 2dk /
@@ -240,24 +236,27 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /* SYMBOL - brackets, operators, punctuation (hold the right thumb Space)
  * Transcribed from the Glove80 Symbol layer; its Tab, Space, Enter, Ins, Esc,
  * Del and one-shot modifiers are left transparent, NAV_NUM already covers them.
- * Keycodes are AZERTY scancodes, so AltGr+4 types '{' and KC_1 types '&'.
+ * Keycodes are AZERTY scancodes, so AltGr+4 types '{' and KC_1 types '&'. The
+ * = - * . / cells use their keypad twins instead, which the host maps the same
+ * way whatever its layout.
+ * Esc leaves for BASE, the way out when a double tap on Space locked the layer.
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * |      |      |  {   |  }   |      |      |                    |      |      |      |      |      |      |
+ * | BASE |      |  {   |  }   |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |  [   |  (   |  )   |  ]   |      |                    |  ~   |  ^   |      |      |      |  ?   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |  <   |  =   |  -   |  >   |  ,   |-------.    ,-------|  .   |  /   |      |      |      |  !   |
  * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
- * |      |  &   |  |   |  +   |  *   |  ;   |-------|    |-------|  :   |  \   |  `   | `|`  | ```  |      |
+ * |      |  &   |  |   |  +   |  *   |  ;   |-------|    |-------|  :   |  \   |  `   |      |      |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            |      |      |  _   |      | /       /       \      \  |      |      |      |      |
  *            `----------------------------------'           '------''---------------------------'
  */
 [SYMBOL] = LAYOUT_split_4x6_5(
-  _______, _______, ALGR(KC_4), ALGR(KC_EQL), _______, _______,              _______,     _______, _______, _______, _______,  _______,
+  TO(BASE), _______, ALGR(KC_4), ALGR(KC_EQL), _______, _______,             _______,     _______, _______, _______, _______,  _______,
   _______, ALGR(KC_5), KC_5, KC_MINS, ALGR(KC_MINS), _______,             ALGR(KC_2), ALGR(KC_9), _______, _______, _______, S(KC_M),
-  _______, KC_NUBS, KC_EQL, KC_6, S(KC_NUBS), KC_M,                       S(KC_COMM), S(KC_DOT), _______, _______, _______, KC_SLSH,
-  _______, KC_1, ALGR(KC_6), S(KC_EQL), KC_BSLS, KC_COMM, _______, _______,   KC_DOT, ALGR(KC_8), EG_BTK1, EG_BTK2, EG_BTK3, _______,
+  _______, KC_NUBS, KC_PEQL, KC_PMNS, S(KC_NUBS), KC_M,                      KC_PDOT,   KC_PSLS, _______, _______, _______, KC_SLSH,
+  _______, KC_1, ALGR(KC_6), S(KC_EQL), KC_PAST, KC_COMM, _______, _______,   KC_DOT, ALGR(KC_8), ALGR(KC_7), _______, _______, _______,
                     _______, _______, KC_8, _______, _______,    _______, _______, _______, _______, _______
 ),
 /* DK1 - 1dk dead key, transcribed from the Glove80 1dk layer.
@@ -790,21 +789,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
         }
-
-        // AltGr+7 is a dead backtick on AZERTY: a trailing space makes it
-        // literal, and the pair leaves the caret between the two.
-        case EG_BTK1 ... EG_BTK3:
-            if (record->event.pressed) {
-                tap_code16(ALGR(KC_7));
-                if (keycode != EG_BTK1) {
-                    tap_code16(ALGR(KC_7));
-                }
-                if (keycode == EG_BTK3) {
-                    tap_code16(ALGR(KC_7));
-                }
-                tap_code(keycode == EG_BTK2 ? KC_LEFT : KC_SPC);
-            }
-            return false;
 
         case EG_DLR ... EG_MINS:
             // Yield to Auto Shift when it is on, so holding reaches the digit.
