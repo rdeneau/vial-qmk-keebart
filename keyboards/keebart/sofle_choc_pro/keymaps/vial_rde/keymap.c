@@ -17,7 +17,7 @@
 enum layers {
     BASE,    // Ergol-R
     NAV_NUM, // navigation, editing, numpad, F1-F12
-    RAISE,   // unchanged, still unreachable
+    SYMBOL,  // brackets, operators, punctuation
     DK1,     // 1dk dead key: accents, typography, arrows
     EMOJI    // 3dk, reached by tapping the dead key twice
 };
@@ -48,7 +48,13 @@ enum custom_keycodes {
     EG_RECY,             // recycling symbol
     EG_POINT,            // index pointing up
     EG_WARN,             // warning sign
-    EG_GEAR              // gear
+    EG_GEAR,             // gear
+    // Space: tap types a space, hold reaches SYMBOL, double tap locks it.
+    EG_SPC,
+    // AltGr+7 is a dead backtick on AZERTY, so each needs its own sequence.
+    EG_BTK1,             // one backtick
+    EG_BTK2,             // a pair, caret left between them
+    EG_BTK3              // a fenced code block
 };
 
 // Unicode map, transcribed from ergol-r_moergo.json (layers 1dk / 2dk /
@@ -189,7 +195,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *      |------+------+------+------+------+------| Space |    | Enter |------+------+------+------+------+------|
  *   3  |LCtrl |   z  |   x  |   c  |   v  | ,  ; |-------|    |-------| .  : |   h  |   g  | -  _ |   k  |PrtScn|  8
  *      `-----------------------------------------/       /     \      \-----------------------------------------'
- *   4             | LAlt | Left |Right | Del  | / Enter /       \Space \  | Bspc |  Up  | Down | RGui |            9
+ *   4             | LAlt | Left |Right | Del  | / Enter /       \ SYM  \  | Bspc |  Up  | Down | RGui |            9
  *                 |      |      |      |      |/       /         \      \ |      |      |      |      |
  *                 `----------------------------------'           '------''---------------------------'
  *
@@ -204,7 +210,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,     KC_A,    KC_B,   KC_O,    KC_P,    KC_Z,                       KC_J, KC_SCLN,    KC_D, OSL(DK1),   KC_Y, KC_NUHS,
   KC_LSFT,    KC_Q,    KC_S,   KC_E,    KC_N,    KC_F,                       KC_L,    KC_R,    KC_T,    KC_I,    KC_U, KC_BSPC,
   KC_LCTL,    KC_W,    KC_X,   KC_C,    KC_V, EG_COMM,  KC_SPC,    KC_ENT, EG_DOT,    KC_H,    KC_G, EG_MINS,    KC_K, EG_PSCR,
-                    KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, KC_ENT,    KC_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
+                    KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, KC_ENT,    EG_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
 ),
 /* NAV_NUM - navigation, editing, numpad, F-keys
  * Ctrl shortcuts are written in AZERTY scancodes: Ctrl+Z (undo) is C(KC_W) and
@@ -231,26 +237,28 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______, C(KC_W), C(KC_X), C(KC_C), C(KC_V), G(C(A(KC_V))), _______, _______, KC_PDOT, KC_P1, KC_P2, KC_P3, KC_PEQL, _______,
                     _______, _______, _______, _______, _______,  _______, KC_P0, KC_P0, KC_PCMM, KC_PENT
 ),
-/* RAISE
- * ,----------------------------------------.                    ,-----------------------------------------.
- * |      |      |      |      |      |      |                    |      |      |      |      |      |      |
+/* SYMBOL - brackets, operators, punctuation (hold the right thumb Space)
+ * Transcribed from the Glove80 Symbol layer; its Tab, Space, Enter, Ins, Esc,
+ * Del and one-shot modifiers are left transparent, NAV_NUM already covers them.
+ * Keycodes are AZERTY scancodes, so AltGr+4 types '{' and KC_1 types '&'.
+ * ,-----------------------------------------.                    ,-----------------------------------------.
+ * |      |      |  {   |  }   |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Esc  | Ins  | Pscr | Menu |      |      |                    |      |      |  Up  |      | DLine| Bspc |
+ * |      |  [   |  (   |  )   |  ]   |      |                    |  ~   |  ^   |      |      |      |  ?   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Tab  | LAt  | LCtl |LShift|      | Caps |-------.    ,-------|      | Left | Down | Rigth|  Del | Bspc |
- * |------+------+------+------+------+------|        |    |       |------+------+------+------+------+------|
- * |Shift | Undo |  Cut | Copy | Paste|      |-------|    |-------|      |      |      |      |      | Shift|
+ * |      |  <   |  =   |  -   |  >   |  ,   |-------.    ,-------|  .   |  /   |      |      |      |  !   |
+ * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
+ * |      |  &   |  |   |  +   |  *   |  ;   |-------|    |-------|  :   |  \   |  `   | `|`  | ```  |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            | LGUI | LAlt | LCTR |LOWER | / Enter /       \Space \  |RAISE | RCTR | RAlt | RGUI |
- *            |      |      |      |      |/       /         \      \ |      |      |      |      |
+ *            |      |      |  _   |      | /       /       \      \  |      |      |      |      |
  *            `----------------------------------'           '------''---------------------------'
  */
-[RAISE] = LAYOUT_split_4x6_5(
-  _______, _______ , _______ , _______ , _______ , _______,                           _______,  _______  , _______,  _______ ,  _______ ,_______,
-  _______,  KC_INS,  KC_PSCR,   KC_APP,  XXXXXXX, XXXXXXX,                        KC_PGUP, XXXXXXX,   KC_UP, XXXXXXX,C(KC_BSPC), KC_BSPC,
-  _______, KC_LALT,  KC_LCTL,  KC_LSFT,  XXXXXXX, KC_CAPS,                       KC_PGDN,  KC_LEFT, KC_DOWN, KC_RGHT,  KC_DEL, KC_BSPC,
-  _______, C(KC_Z), C(KC_X), C(KC_C), C(KC_V), XXXXXXX,  _______,       _______,  XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,   XXXXXXX, _______,
-                         _______, _______, _______, _______, _______,       _______, _______, _______, _______, _______
+[SYMBOL] = LAYOUT_split_4x6_5(
+  _______, _______, ALGR(KC_4), ALGR(KC_EQL), _______, _______,              _______,     _______, _______, _______, _______,  _______,
+  _______, ALGR(KC_5), KC_5, KC_MINS, ALGR(KC_MINS), _______,             ALGR(KC_2), ALGR(KC_9), _______, _______, _______, S(KC_M),
+  _______, KC_NUBS, KC_EQL, KC_6, S(KC_NUBS), KC_M,                       S(KC_COMM), S(KC_DOT), _______, _______, _______, KC_SLSH,
+  _______, KC_1, ALGR(KC_6), S(KC_EQL), KC_BSLS, KC_COMM, _______, _______,   KC_DOT, ALGR(KC_8), EG_BTK1, EG_BTK2, EG_BTK3, _______,
+                    _______, _______, KC_8, _______, _______,    _______, _______, _______, _______, _______
 ),
 /* DK1 - 1dk dead key, transcribed from the Glove80 1dk layer.
  * Shift (or Caps Lock) gives the 2dk counterpart, so the whole 2dk layer is
@@ -307,7 +315,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [BASE]  = { ENCODER_CCW_CW(KC_UP,   KC_DOWN), ENCODER_CCW_CW(KC_LEFT, KC_RGHT) },
     [NAV_NUM] = { ENCODER_CCW_CW(KC_WH_U, KC_WH_D), ENCODER_CCW_CW(KC_WH_L, KC_WH_R) },
-    [RAISE] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+    [SYMBOL] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
     [DK1] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
     [EMOJI] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) }
 };
@@ -617,58 +625,79 @@ static void dk_hold_emit(bool extra_shift) {
     dk_hold.pending = false;
 }
 
-// PrtScr: tap / hold / double tap ---------------------------------------------
+// Layer keys: tap / hold / double tap --------------------------------------
 //
 // Hand-rolled because Vial owns tap_dance_actions[] (vial.c), so a static tap
-// dance does not link. KC_PSCR is held back until the double-tap window closes,
-// otherwise a double tap would flash the Windows capture overlay first.
+// dance does not link. The tap keycode is held back until the double-tap window
+// closes, otherwise a double tap would emit it first - which for PrtScr would
+// flash the Windows capture overlay.
 
-enum pscr_state { PSCR_IDLE, PSCR_HELD, PSCR_TAPPED };
+enum tap_layer_state { TL_IDLE, TL_HELD, TL_TAPPED };
 
-static struct {
-    enum pscr_state state;
-    uint16_t        timer;
-    bool            locked; // layer left on by a double tap
-} pscr = {PSCR_IDLE, 0, false};
+typedef struct {
+    uint8_t              layer;
+    uint16_t             tap_keycode;
+    enum tap_layer_state state;
+    uint16_t             timer;
+    bool                 locked; // layer left on by a double tap
+} tap_layer_t;
 
-static void pscr_press(void) {
-    if (pscr.locked) {
-        // Any further tap just releases the lock - no PrtScr.
-        layer_off(NAV_NUM);
-        pscr.locked = false;
-        pscr.state  = PSCR_IDLE;
-        return;
+static tap_layer_t tap_layers[] = {
+    {NAV_NUM, KC_PSCR, TL_IDLE, 0, false},
+    {SYMBOL,  KC_SPC,  TL_IDLE, 0, false},
+};
+
+static tap_layer_t *tap_layer_for(uint16_t keycode) {
+    switch (keycode) {
+        case EG_PSCR:
+            return &tap_layers[0];
+        case EG_SPC:
+            return &tap_layers[1];
+        default:
+            return NULL;
     }
-    if (pscr.state == PSCR_TAPPED && timer_elapsed(pscr.timer) < TAPPING_TERM) {
-        // Second tap inside the window: lock the layer, swallow the PrtScr.
-        layer_on(NAV_NUM);
-        pscr.locked = true;
-        pscr.state  = PSCR_IDLE;
-        return;
-    }
-    pscr.state = PSCR_HELD;
-    pscr.timer = timer_read();
-    layer_on(NAV_NUM);
 }
 
-static void pscr_release(void) {
-    if (pscr.state != PSCR_HELD) {
+static void tap_layer_press(tap_layer_t *tl) {
+    if (tl->locked) {
+        // Any further tap just releases the lock - no keycode emitted.
+        layer_off(tl->layer);
+        tl->locked = false;
+        tl->state  = TL_IDLE;
         return;
     }
-    layer_off(NAV_NUM);
-    if (timer_elapsed(pscr.timer) < TAPPING_TERM) {
-        // Might be the first half of a double tap: wait before typing PrtScr.
-        pscr.state = PSCR_TAPPED;
-        pscr.timer = timer_read();
+    if (tl->state == TL_TAPPED && timer_elapsed(tl->timer) < TAPPING_TERM) {
+        // Second tap inside the window: lock the layer, swallow the keycode.
+        layer_on(tl->layer);
+        tl->locked = true;
+        tl->state  = TL_IDLE;
+        return;
+    }
+    tl->state = TL_HELD;
+    tl->timer = timer_read();
+    layer_on(tl->layer);
+}
+
+static void tap_layer_release(tap_layer_t *tl) {
+    if (tl->state != TL_HELD) {
+        return;
+    }
+    layer_off(tl->layer);
+    if (timer_elapsed(tl->timer) < TAPPING_TERM) {
+        // Might be the first half of a double tap: wait before emitting.
+        tl->state = TL_TAPPED;
+        tl->timer = timer_read();
     } else {
-        pscr.state = PSCR_IDLE;
+        tl->state = TL_IDLE;
     }
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-    // TO(BASE) on Esc, or any other exit, must not leave the lock flag set.
-    if (!(state & (1UL << NAV_NUM))) {
-        pscr.locked = false;
+    // TO(BASE) on Esc, or any other exit, must not leave a lock flag set.
+    for (uint8_t i = 0; i < ARRAY_SIZE(tap_layers); i++) {
+        if (!(state & (1UL << tap_layers[i].layer))) {
+            tap_layers[i].locked = false;
+        }
     }
     return state;
 }
@@ -677,9 +706,12 @@ void matrix_scan_user(void) {
     if (dk_hold.pending && timer_elapsed(dk_hold.timer) >= get_generic_autoshift_timeout()) {
         dk_hold_emit(true);
     }
-    if (pscr.state == PSCR_TAPPED && timer_elapsed(pscr.timer) >= TAPPING_TERM) {
-        pscr.state = PSCR_IDLE;
-        tap_code(KC_PSCR);
+    for (uint8_t i = 0; i < ARRAY_SIZE(tap_layers); i++) {
+        tap_layer_t *tl = &tap_layers[i];
+        if (tl->state == TL_TAPPED && timer_elapsed(tl->timer) >= TAPPING_TERM) {
+            tl->state = TL_IDLE;
+            tap_code(tl->tap_keycode);
+        }
     }
 }
 
@@ -749,10 +781,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case EG_PSCR:
+        case EG_SPC: {
+            tap_layer_t *tl = tap_layer_for(keycode);
             if (record->event.pressed) {
-                pscr_press();
+                tap_layer_press(tl);
             } else {
-                pscr_release();
+                tap_layer_release(tl);
+            }
+            return false;
+        }
+
+        // AltGr+7 is a dead backtick on AZERTY: a trailing space makes it
+        // literal, and the pair leaves the caret between the two.
+        case EG_BTK1 ... EG_BTK3:
+            if (record->event.pressed) {
+                tap_code16(ALGR(KC_7));
+                if (keycode != EG_BTK1) {
+                    tap_code16(ALGR(KC_7));
+                }
+                if (keycode == EG_BTK3) {
+                    tap_code16(ALGR(KC_7));
+                }
+                tap_code(keycode == EG_BTK2 ? KC_LEFT : KC_SPC);
             }
             return false;
 

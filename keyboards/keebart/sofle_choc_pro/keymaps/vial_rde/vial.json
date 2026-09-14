@@ -405,6 +405,26 @@
             "name": "EG_GEAR",
             "title": "gear emoji (U+2699 U+FE0F)",
             "shortName": "Gear"
+        },
+        {
+            "name": "EG_SPC",
+            "title": "space, hold reaches SYMBOL, double tap locks it",
+            "shortName": "Spc"
+        },
+        {
+            "name": "EG_BTK1",
+            "title": "one backtick",
+            "shortName": "`"
+        },
+        {
+            "name": "EG_BTK2",
+            "title": "a pair of backticks, caret between them",
+            "shortName": "` `"
+        },
+        {
+            "name": "EG_BTK3",
+            "title": "a fenced code block",
+            "shortName": "```"
         }
     ]
 }
