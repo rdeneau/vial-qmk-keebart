@@ -108,7 +108,7 @@ enum unicode_names {
     ARR_DH,   ARR_DH_UP,   // down arrowhead / down triangle
     // 1dk characters with no 2dk counterpart
     SUP2, CURREN, RSQUO, PERMIL, DIVIDE, SECT, MICRO, CRARR, NBSP, DIAMOND,
-    SHARP, PLUSMIN, PILCROW,
+    SHARP, PLUSMIN, PILCROW, TAB_CHR,
     // Emoji layer, single code point only
     E_QUEST, E_BUG, E_OK, E_ART, E_WAVE, E_MEMO, E_IDEA,
     E_THUMB, E_ALERT, E_SPARK, E_EYES, E_PRAY, E_LINK, E_TEST,
@@ -166,6 +166,10 @@ const uint32_t PROGMEM unicode_map[] = {
     [SHARP]    = 0x266F,                       // music sharp sign
     [PLUSMIN]  = 0x00B1,                       // plus-minus sign
     [PILCROW]  = 0x00B6,                       // pilcrow sign
+    // A real U+0009, typed through WinCompose. KC_TAB would be indistinguishable
+    // from the Tab key itself, and an editor is free to turn that into indent,
+    // completion or focus change instead of a character.
+    [TAB_CHR]  = 0x0009,                       // character tabulation
     [E_QUEST]  = 0x2753,                      // question
     [E_BUG]    = 0x1F41B,                      // bug
     [E_OK]     = 0x1F44C,                      // ok hand
@@ -292,7 +296,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * |  2   |  o/  |  <<  |  >>  |  '   | 0/00 |                    |      |      |      | shrp |  +-  |  !=  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * | Tab  |  a^  |  oe  |  o^  |  par |  pil |                    |  o/  |  mu  | div  |EMOJI |  *   |  x   |
+ * | TAB  |  a^  |  oe  |  o^  |  par |  pil |                    |  o/  |  mu  | div  |EMOJI |  *   |  x   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |  a`  |  e`  |  e'  |  e^  |  ae  |-------.    ,-------|  |_  |  --  |  i:  |  i^  |  u^  |  u`  |
  * |------+------+------+------+------+------|       |    | back  |------+------+------+------+------+------|
@@ -303,7 +307,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [DK1] = LAYOUT_split_4x6_5(
   UM(SUP2), UM(CURREN), UP(LAQUO, LAQUO_UP), UP(RAQUO, RAQUO_UP), UM(RSQUO), UM(PERMIL),        _______, _______, _______, UM(SHARP), UM(PLUSMIN), UP(NEQ, NEQ_UP),
-  KC_TAB,   UP(A_CIR, A_CIR_UP), UP(OE, OE_UP), UP(O_CIR, O_CIR_UP), UM(SECT), UM(PILCROW),             UP(O_SLSH, O_SLSH_UP), UM(MICRO), UM(DIVIDE), OSL(EMOJI), UP(STAR, STAR_UP), UP(TIMES, TIMES_UP),
+  UM(TAB_CHR), UP(A_CIR, A_CIR_UP), UP(OE, OE_UP), UP(O_CIR, O_CIR_UP), UM(SECT), UM(PILCROW),             UP(O_SLSH, O_SLSH_UP), UM(MICRO), UM(DIVIDE), OSL(EMOJI), UP(STAR, STAR_UP), UP(TIMES, TIMES_UP),
   _______,  UP(A_GRV, A_GRV_UP), UP(E_GRV, E_GRV_UP), UP(E_ACU, E_ACU_UP), UP(E_CIR, E_CIR_UP), UP(AE, AE_UP),                UP(BOX_UR, BOX_UR_UP), UP(BOX_H, BOX_H_UP), UP(I_DIA, I_DIA_UP), UP(I_CIR, I_CIR_UP), UP(U_CIR, U_CIR_UP), UP(U_GRV, U_GRV_UP),
   _______,  UP(LSAQ, LSAQ_UP), UP(CROSS, CROSS_UP), UP(C_CED, C_CED_UP), UP(RSAQ, RSAQ_UP), _______, _______, UM(CRARR), UP(MIDDOT, MIDDOT_UP), UP(ELLIP, ELLIP_UP), UM(DIAMOND), UP(DASH, DASH_UP), UP(CHECK, CHECK_UP), _______,
                     UP(ARR_LR, ARR_LR_UP), UP(ARR_L, ARR_L_UP), UP(ARR_R, ARR_R_UP), _______, UM(CRARR),   UM(NBSP), UP(ARR_UH, ARR_UH_UP), UP(ARR_U, ARR_U_UP), UP(ARR_D, ARR_D_UP), UP(ARR_DH, ARR_DH_UP)
@@ -455,8 +459,11 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         rgb_matrix_set_color(matrix_to_led(7, col), CLR_GREEN);
     }
 
-    // The 1dk key - toggles between red and green.
-    if (user_state.o_key_is_green) {
+    // The 1dk key - red, and violet on the 1dk layer itself, where the next
+    // tap on it reaches the violet Emoji layer.
+    if (layer == DK1) {
+        rgb_matrix_set_color(matrix_to_led(6, 2), CLR_VIOLET);
+    } else if (user_state.o_key_is_green) {
         rgb_matrix_set_color(matrix_to_led(6, 2), CLR_GREEN);
     } else {
         rgb_matrix_set_color(matrix_to_led(6, 2), CLR_RED);
@@ -483,9 +490,9 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             break;
     }
 
-    // Caps Lock indicator - green when active.
+    // Caps Lock indicator - green on the Shift key that switches it.
     if (host_keyboard_led_state().caps_lock) {
-        rgb_matrix_set_color(matrix_to_led(3, 0), CLR_GREEN);
+        rgb_matrix_set_color(matrix_to_led(2, 0), CLR_GREEN);
     }
 
     return false;
