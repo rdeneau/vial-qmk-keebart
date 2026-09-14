@@ -395,6 +395,20 @@ void keyboard_post_init_user(void) {
     rgb_matrix_set_flags(LED_FLAG_ALL);
 }
 
+// rgb_matrix_set_color() takes a global LED index, but on a split half the core
+// only subtracts the half offset for indices that belong to that half; an index
+// from the other half is passed through and lands on a local LED of the same
+// number. So the Esc colour, written at index 26, also reached the right half's
+// twenty-seventh LED - the top right key, F11 on NavNum and = + on Symbol.
+// Painting only what this pass owns is what keeps the two halves apart.
+static uint8_t led_lo, led_hi;
+
+static void set_led(uint8_t led, uint8_t red, uint8_t green, uint8_t blue) {
+    if (led >= led_lo && led < led_hi) {
+        rgb_matrix_set_color(led, red, green, blue);
+    }
+}
+
 // Custom LED indicator function
 //
 // Every layer shows the same static map - white edges, yellow digit row, green
@@ -404,32 +418,35 @@ void keyboard_post_init_user(void) {
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     uint8_t layer = get_highest_layer(layer_state);
 
+    led_lo = led_min;
+    led_hi = led_max;
+
     for (uint8_t i = led_min; i < led_max; i++) {
-        rgb_matrix_set_color(i, CLR_OFF);
+        set_led(i, CLR_OFF);
     }
 
     // Outer columns - white. Left: Esc, Tab, Shift, Ctrl.
-    rgb_matrix_set_color(matrix_to_led(0, 0), CLR_WHITE);
-    rgb_matrix_set_color(matrix_to_led(1, 0), CLR_WHITE);
-    rgb_matrix_set_color(matrix_to_led(2, 0), CLR_WHITE);
-    rgb_matrix_set_color(matrix_to_led(3, 0), CLR_WHITE);
+    set_led(matrix_to_led(0, 0), CLR_WHITE);
+    set_led(matrix_to_led(1, 0), CLR_WHITE);
+    set_led(matrix_to_led(2, 0), CLR_WHITE);
+    set_led(matrix_to_led(3, 0), CLR_WHITE);
     // Right: * u, Bspc, PrtScr.
-    rgb_matrix_set_color(matrix_to_led(6, 0), CLR_WHITE);
-    rgb_matrix_set_color(matrix_to_led(7, 0), CLR_WHITE);
-    rgb_matrix_set_color(matrix_to_led(8, 0), CLR_WHITE);
+    set_led(matrix_to_led(6, 0), CLR_WHITE);
+    set_led(matrix_to_led(7, 0), CLR_WHITE);
+    set_led(matrix_to_led(8, 0), CLR_WHITE);
 
     // Digit row - yellow, both halves.
     for (uint8_t col = 1; col <= 5; col++) {
-        rgb_matrix_set_color(matrix_to_led(0, col), CLR_YELLOW);
+        set_led(matrix_to_led(0, col), CLR_YELLOW);
     }
     for (uint8_t col = 0; col <= 5; col++) {
-        rgb_matrix_set_color(matrix_to_led(5, col), CLR_YELLOW);
+        set_led(matrix_to_led(5, col), CLR_YELLOW);
     }
 
     // Home row resting keys - green: a s e n on the left, r t i u on the right.
     for (uint8_t col = 1; col <= 4; col++) {
-        rgb_matrix_set_color(matrix_to_led(2, col), CLR_GREEN);
-        rgb_matrix_set_color(matrix_to_led(7, col), CLR_GREEN);
+        set_led(matrix_to_led(2, col), CLR_GREEN);
+        set_led(matrix_to_led(7, col), CLR_GREEN);
     }
 
     // NAV_NUM repaints the two halves it redefines: the digit row is F1 to F12
@@ -437,49 +454,49 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     if (layer == NAV_NUM) {
         // F1-F5 on the left, F6-F11 on the right, F12 one row below.
         for (uint8_t col = 1; col <= 5; col++) {
-            rgb_matrix_set_color(matrix_to_led(0, col), CLR_PINK);
+            set_led(matrix_to_led(0, col), CLR_PINK);
         }
         for (uint8_t col = 0; col <= 5; col++) {
-            rgb_matrix_set_color(matrix_to_led(5, col), CLR_PINK);
+            set_led(matrix_to_led(5, col), CLR_PINK);
         }
-        rgb_matrix_set_color(matrix_to_led(6, 0), CLR_PINK);
+        set_led(matrix_to_led(6, 0), CLR_PINK);
 
         // The keypad digits only: 7 8 9 / 4 5 6 / 1 2 3, then the two zeros on
         // the thumbs. The operators around them stay as the base map had them.
         for (uint8_t row = 6; row <= 8; row++) {
             for (uint8_t col = 2; col <= 4; col++) {
-                rgb_matrix_set_color(matrix_to_led(row, col), CLR_YELLOW);
+                set_led(matrix_to_led(row, col), CLR_YELLOW);
             }
         }
-        rgb_matrix_set_color(matrix_to_led(9, 3), CLR_YELLOW);
-        rgb_matrix_set_color(matrix_to_led(9, 2), CLR_YELLOW);
+        set_led(matrix_to_led(9, 3), CLR_YELLOW);
+        set_led(matrix_to_led(9, 2), CLR_YELLOW);
     }
 
     // The 1dk key - red, and violet on the 1dk layer itself, where the next tap
     // on it reaches the violet Emoji layer. NAV_NUM and EMOJI give that key
     // something else entirely, so the marker would only mislead there.
     if (layer == DK1) {
-        rgb_matrix_set_color(matrix_to_led(6, 2), CLR_VIOLET);
+        set_led(matrix_to_led(6, 2), CLR_VIOLET);
     } else if (layer != NAV_NUM && layer != EMOJI) {
-        rgb_matrix_set_color(matrix_to_led(6, 2), CLR_RED);
+        set_led(matrix_to_led(6, 2), CLR_RED);
     }
 
     // PrtScr - orange, the key that reaches NAV_NUM.
-    rgb_matrix_set_color(matrix_to_led(8, 0), CLR_ORANGE);
+    set_led(matrix_to_led(8, 0), CLR_ORANGE);
 
     // Esc - the active layer. BASE keeps the white of its column.
     switch (layer) {
         case NAV_NUM:
-            rgb_matrix_set_color(matrix_to_led(0, 0), CLR_ORANGE);
+            set_led(matrix_to_led(0, 0), CLR_ORANGE);
             break;
         case SYMBOL:
-            rgb_matrix_set_color(matrix_to_led(0, 0), CLR_BLUE);
+            set_led(matrix_to_led(0, 0), CLR_BLUE);
             break;
         case DK1:
-            rgb_matrix_set_color(matrix_to_led(0, 0), CLR_RED);
+            set_led(matrix_to_led(0, 0), CLR_RED);
             break;
         case EMOJI:
-            rgb_matrix_set_color(matrix_to_led(0, 0), CLR_VIOLET);
+            set_led(matrix_to_led(0, 0), CLR_VIOLET);
             break;
         default:
             break;
@@ -487,7 +504,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 
     // Caps Lock indicator - green on the Shift key that switches it.
     if (host_keyboard_led_state().caps_lock) {
-        rgb_matrix_set_color(matrix_to_led(2, 0), CLR_GREEN);
+        set_led(matrix_to_led(2, 0), CLR_GREEN);
     }
 
     return false;
