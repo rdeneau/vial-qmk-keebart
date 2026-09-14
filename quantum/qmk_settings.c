@@ -189,7 +189,9 @@ void qmk_settings_init(void) {
 
 void qmk_settings_reset(void) {
     QS.grave_esc_override = 0;
-    QS.auto_shift = 0;
+    // Default on: an EEPROM reset would otherwise silently disable Auto Shift,
+    // and the Vial UI can keep showing a stale value until it re-reads.
+    QS.auto_shift = 1;
     QS.auto_shift_timeout = AUTO_SHIFT_TIMEOUT;
     QS.osk_tap_toggle = ONESHOT_TAP_TOGGLE;
     QS.osk_timeout = ONESHOT_TIMEOUT;

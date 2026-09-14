@@ -8,6 +8,7 @@
 // sequence for U+00E0 comes out as "uaaea" on the French AZERTY host: KC_0
 // types a-grave there, not a zero.
 #include "sendstring_french.h"
+#include "qmk_settings.h"
 
 // The host OS layout is French AZERTY: the firmware only sends raw scancodes
 // and the host turns them into Ergol-R glyphs (KC_A -> q, KC_W -> z,
@@ -586,6 +587,36 @@ static void tap_dual_glyph(const dual_glyph_t *pair, bool want_shifted) {
     send_keyboard_report();
 }
 
+// Auto Shift has two switches: QS_auto_shift_enable is Vial's QMK Settings
+// toggle, which process_auto_shift tests first and returns on, while
+// get_autoshift_state() only reports the AS_TOGG runtime state and stays true
+// when the setting is off. Both must hold, or a key yielding to Auto Shift is
+// simply never typed by anyone.
+static bool autoshift_will_run(void) {
+    return QS_auto_shift_enable && get_autoshift_state();
+}
+
+// Dead-key layer: hold reaches the 2dk counterpart --------------------------
+
+static struct {
+    uint16_t keycode;
+    uint16_t timer;
+    bool     pending;
+} dk_hold = {KC_NO, 0, false};
+
+// extra_shift is what the hold adds; unicodemap_index() reads the real Shift
+// and Caps Lock state on its own.
+static void dk_hold_emit(bool extra_shift) {
+    if (extra_shift) {
+        add_weak_mods(MOD_BIT(KC_LSFT));
+    }
+    register_unicodemap(unicodemap_index(dk_hold.keycode));
+    if (extra_shift) {
+        del_weak_mods(MOD_BIT(KC_LSFT));
+    }
+    dk_hold.pending = false;
+}
+
 // PrtScr: tap / hold / double tap ---------------------------------------------
 //
 // Hand-rolled because Vial owns tap_dance_actions[] (vial.c), so a static tap
@@ -643,6 +674,9 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 }
 
 void matrix_scan_user(void) {
+    if (dk_hold.pending && timer_elapsed(dk_hold.timer) >= get_generic_autoshift_timeout()) {
+        dk_hold_emit(true);
+    }
     if (pscr.state == PSCR_TAPPED && timer_elapsed(pscr.timer) >= TAPPING_TERM) {
         pscr.state = PSCR_IDLE;
         tap_code(KC_PSCR);
@@ -657,26 +691,19 @@ void matrix_scan_user(void) {
 //
 // process_record_user runs at quantum.c:364, process_auto_shift at :411, so the
 // EG_* keys only reach Auto Shift because their case below yields to it while
-// it is enabled.
+// it is enabled. That works for them because nothing else in the chain types a
+// custom keycode.
+//
+// The UP() pairs cannot use Auto Shift at all: process_unicode_common runs at
+// :405, ahead of it, so the character was typed once on press and once more by
+// autoshift_press_user on release. They get the small hold timer below instead,
+// which consumes the key before either of those runs.
 
 bool get_custom_auto_shifted_key(uint16_t keycode, keyrecord_t *record) {
-    return IS_QK_UNICODEMAP_PAIR(keycode) || (keycode >= EG_DLR && keycode <= EG_MINS);
+    return keycode >= EG_DLR && keycode <= EG_MINS;
 }
 
 void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
-    if (IS_QK_UNICODEMAP_PAIR(keycode)) {
-        // register_code16() would bypass process_unicodemap and send the raw
-        // keycode, so drive the unicode map directly. unicodemap_index() reads
-        // the shift state, hence the weak mod around it.
-        if (shifted) {
-            add_weak_mods(MOD_BIT(KC_LSFT));
-        }
-        register_unicodemap(unicodemap_index(keycode));
-        if (shifted) {
-            del_weak_mods(MOD_BIT(KC_LSFT));
-        }
-        return;
-    }
     if (keycode >= EG_DLR && keycode <= EG_MINS) {
         const dual_glyph_t *pair = &dual_glyphs[keycode - EG_DLR];
         // Hold reaches the digit, and so do Shift and Caps Lock: either is
@@ -691,8 +718,8 @@ void autoshift_press_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
 }
 
 void autoshift_release_user(uint16_t keycode, bool shifted, keyrecord_t *record) {
-    // Both branches above type and release in one go, nothing stays held.
-    if (IS_QK_UNICODEMAP_PAIR(keycode) || (keycode >= EG_DLR && keycode <= EG_MINS)) {
+    // The branch above types and releases in one go, nothing stays held.
+    if (keycode >= EG_DLR && keycode <= EG_MINS) {
         return;
     }
     unregister_code16((IS_RETRO(keycode)) ? keycode & 0xFF : keycode);
@@ -708,6 +735,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             break;
 
+        case QK_UNICODEMAP_PAIR ... QK_UNICODEMAP_PAIR_MAX:
+            if (!autoshift_will_run()) {
+                break; // let process_unicodemap type it on press, as usual
+            }
+            if (record->event.pressed) {
+                dk_hold.keycode = keycode;
+                dk_hold.timer   = timer_read();
+                dk_hold.pending = true;
+            } else if (dk_hold.pending && dk_hold.keycode == keycode) {
+                dk_hold_emit(false);
+            }
+            return false;
+
         case EG_PSCR:
             if (record->event.pressed) {
                 pscr_press();
@@ -720,7 +760,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // Yield to Auto Shift when it is on, so holding reaches the digit.
             // It is consulted later in the chain and would never see these keys
             // otherwise. When it is off, type the glyph here instead.
-            if (get_autoshift_state()) {
+            if (autoshift_will_run()) {
                 return true;
             }
             if (record->event.pressed) {
