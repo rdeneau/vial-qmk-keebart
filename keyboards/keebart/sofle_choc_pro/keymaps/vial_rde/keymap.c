@@ -356,6 +356,7 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #define CLR_RED     64, 0, 0       // #400000 (25% brightness)
 #define CLR_BLUE    0, 0, 64       // #000040 (25% brightness)
 #define CLR_VIOLET  48, 0, 64      // #300040 (25% brightness)
+#define CLR_PINK    64, 14, 46     // #400E2E (25% brightness)
 #define CLR_OFF     0, 0, 0
 
 // Helper function to find LED index by matrix position
@@ -431,11 +432,35 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         rgb_matrix_set_color(matrix_to_led(7, col), CLR_GREEN);
     }
 
-    // The 1dk key - red, and violet on the 1dk layer itself, where the next
-    // tap on it reaches the violet Emoji layer.
+    // NAV_NUM repaints the two halves it redefines: the digit row is F1 to F12
+    // there, and the right half is a numeric keypad.
+    if (layer == NAV_NUM) {
+        // F1-F5 on the left, F6-F11 on the right, F12 one row below.
+        for (uint8_t col = 1; col <= 5; col++) {
+            rgb_matrix_set_color(matrix_to_led(0, col), CLR_PINK);
+        }
+        for (uint8_t col = 0; col <= 5; col++) {
+            rgb_matrix_set_color(matrix_to_led(5, col), CLR_PINK);
+        }
+        rgb_matrix_set_color(matrix_to_led(6, 0), CLR_PINK);
+
+        // The keypad digits only: 7 8 9 / 4 5 6 / 1 2 3, then the two zeros on
+        // the thumbs. The operators around them stay as the base map had them.
+        for (uint8_t row = 6; row <= 8; row++) {
+            for (uint8_t col = 2; col <= 4; col++) {
+                rgb_matrix_set_color(matrix_to_led(row, col), CLR_YELLOW);
+            }
+        }
+        rgb_matrix_set_color(matrix_to_led(9, 3), CLR_YELLOW);
+        rgb_matrix_set_color(matrix_to_led(9, 2), CLR_YELLOW);
+    }
+
+    // The 1dk key - red, and violet on the 1dk layer itself, where the next tap
+    // on it reaches the violet Emoji layer. NAV_NUM and EMOJI give that key
+    // something else entirely, so the marker would only mislead there.
     if (layer == DK1) {
         rgb_matrix_set_color(matrix_to_led(6, 2), CLR_VIOLET);
-    } else {
+    } else if (layer != NAV_NUM && layer != EMOJI) {
         rgb_matrix_set_color(matrix_to_led(6, 2), CLR_RED);
     }
 
