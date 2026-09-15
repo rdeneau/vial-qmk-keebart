@@ -240,19 +240,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_LCTL,    KC_W,    KC_X,   KC_C,    KC_V, EG_COMM,  KC_SPC,    KC_ENT, EG_DOT,    KC_H,    KC_G, EG_MINS,    KC_K, EG_PSCR,
                     KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, EG_ENT,    EG_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
 ),
-/* NAV_NUM - navigation, editing, numpad, F-keys
- * Ctrl shortcuts are written in AZERTY scancodes: Ctrl+Z (undo) is C(KC_W) and
- * Ctrl+A (select all) is C(KC_Q), because the host swaps those letter pairs.
+/* NAV_NUM - navigation, numpad, F-keys
+ * The editing shortcuts moved to EDITOR, which is what the left thumb is for.
  * Esc leaves for BASE, the way out when a double tap on PrtScr locked the layer.
  * No Num Lock key: it is on by default on the host.
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | BASE |  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F11  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      | Redo | Home |  Up  | End  | PgUp |                    |  KP/ |  KP7 |  KP8 |  KP9 |  KP* | F12  |
+ * |      |      | Home |  Up  | End  | PgUp |                    |  KP/ |  KP7 |  KP8 |  KP9 |  KP* | F12  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      | SelAl| Left | Down |Right | PgDn |-------.    ,-------|  KP- |  KP4 |  KP5 |  KP6 |  KP+ |      |
+ * |      |      | Left | Down |Right | PgDn |-------.    ,-------|  KP- |  KP4 |  KP5 |  KP6 |  KP+ |      |
  * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
- * |      | Undo | Cut  | Copy |Paste |PasteT|-------|    |-------|  KP. |  KP1 |  KP2 |  KP3 |  KP= |      |
+ * |      |      |      |      |      |      |-------|    |-------|  KP. |  KP1 |  KP2 |  KP3 |  KP= |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            |      |      |      |      | /       /       \      \  | KP0  | KP0  | KP,  |KPEnt |
  *            |      |      |      |      |/       /         \      \ |      |      |      |      |
@@ -260,9 +259,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [NAV_NUM] = LAYOUT_split_4x6_5(
   TO(BASE),  KC_F1,   KC_F2,   KC_F3,    KC_F4,    KC_F5,                    KC_F6,  KC_F7,  KC_F8,   KC_F9,  KC_F10,  KC_F11,
-  _______, C(KC_Y), KC_HOME,   KC_UP,   KC_END,  KC_PGUP,                  KC_PSLS,  KC_P7,  KC_P8,   KC_P9, KC_PAST,  KC_F12,
-  _______, C(KC_Q), KC_LEFT, KC_DOWN,  KC_RGHT,  KC_PGDN,                  KC_PMNS,  KC_P4,  KC_P5,   KC_P6, KC_PPLS, _______,
-  _______, C(KC_W), C(KC_X), C(KC_C), C(KC_V), G(C(A(KC_V))), _______, _______, KC_PDOT, KC_P1, KC_P2, KC_P3, KC_PEQL, _______,
+  _______, _______, KC_HOME,   KC_UP,   KC_END,  KC_PGUP,                  KC_PSLS,  KC_P7,  KC_P8,   KC_P9, KC_PAST,  KC_F12,
+  _______, _______, KC_LEFT, KC_DOWN,  KC_RGHT,  KC_PGDN,                  KC_PMNS,  KC_P4,  KC_P5,   KC_P6, KC_PPLS, _______,
+  _______, _______, _______, _______, _______, _______, _______, _______, KC_PDOT,  KC_P1,  KC_P2,   KC_P3, KC_PEQL, _______,
                     _______, _______, _______, _______, _______,  _______, KC_P0, KC_P0, KC_PCMM, KC_PENT
 ),
 /* SYMBOL - brackets, operators, punctuation (hold the right thumb Space)
@@ -346,8 +345,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * Transcribed from the Glove80 Cursor layer, minus its navigation: NAV_NUM
  * already carries Home/End/arrows/PgUp/PgDn and there is nothing to gain from
  * a second copy. What is left is what a keyboard cannot reach in one stroke.
- * Cut, Copy and Paste sit in the right index column, in that order top to
- * bottom, so the three most chorded shortcuts of the day become one slide.
+ * The clipboard sits on the left home row - Select All, Cut, Copy, Paste on
+ * a, s, e, n - with Undo and Redo on the keys that name them, z and q, and
+ * Paste as plain text one row below Paste, on v.
+ * Ctrl shortcuts are written in AZERTY scancodes: Ctrl+Z (undo) is C(KC_W) and
+ * Ctrl+A (select all) is C(KC_Q), because the host swaps those letter pairs.
  * Esc leaves for BASE, the way out when a double tap on Enter locked the layer.
  * The knobs work the selection: the left one shrinks and extends it, the right
  * one removes and adds an occurrence to the multi-cursor, and their two push
@@ -360,20 +362,20 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | BASE |      |      |      |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |      |      |      |      |      |                    | Cut  |      | Dupl |      |      |      |
+ * |      | Redo |      | Open |Print |      |                    | Join |      | Dupl |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |      |      |      |      | Fmt  |-------.    ,-------| Copy |      |      |      |      |      |
+ * |      | SelAl| Cut  | Copy |Paste | Fmt  |-------.    ,-------|      |      |      |      |      |      |
  * |------+------+------+------+------+------| SelAl |    | SelOc |------+------+------+------+------+------|
- * |      |      |      |      |      |      |-------|    |-------|Paste |PstTxt|      |      |      |      |
+ * |      | Undo |      |      |PstTxt|      |-------|    |-------|      |      |      |      |      |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            |      |      |      |      | /       /       \      \  |      |      |      |      |
  *            `----------------------------------'           '------''---------------------------'
  */
 [EDITOR] = LAYOUT_split_4x6_5(
   TO(BASE), _______, _______, _______, _______, _______,                    _______, _______, _______, _______, _______, _______,
-  _______,  _______, _______, _______, _______, _______,                    C(KC_X), _______,  C(KC_D), _______, _______, _______,
-  _______,  _______, _______, _______, _______,  EG_FMT,                    C(KC_C), _______, _______, _______, _______, _______,
-  _______,  _______, _______, _______, _______, _______, C(KC_Q), C(A(KC_F3)), C(KC_V), G(C(A(KC_V))), _______, _______, _______, _______,
+  _______,  C(KC_Y), _______, C(KC_O), C(KC_P), _______,                 S(C(KC_J)), _______,  C(KC_D), _______, _______, _______,
+  _______,  C(KC_Q), C(KC_X), C(KC_C), C(KC_V),  EG_FMT,                    _______, _______, _______, _______, _______, _______,
+  _______,  C(KC_W), _______, _______, G(C(A(KC_V))), _______, C(KC_Q), C(A(KC_F3)), _______, _______, _______, _______, _______, _______,
                     _______, _______, _______, _______, _______,    _______, _______, _______, _______, _______
 ),
 };
