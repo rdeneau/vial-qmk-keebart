@@ -5,6 +5,7 @@
 
 // RGB Matrix custom configuration
 #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
+#undef RGB_MATRIX_DEFAULT_VAL
 #define RGB_MATRIX_DEFAULT_VAL 19  // Brightness 7.5/100 (19/255)
 
 // Unicode input - WinCompose on Windows.
