@@ -18,7 +18,8 @@ enum layers {
     NAV_NUM, // navigation, editing, numpad, F1-F12
     SYMBOL,  // brackets, operators, punctuation
     DK1,     // 1dk dead key: accents, typography, arrows
-    EMOJI    // 3dk, reached by tapping the dead key twice
+    EMOJI,   // 3dk, reached by tapping the dead key twice
+    EDITOR   // editing shortcuts, reached by holding the left thumb Enter
 };
 
 // Keys carrying two glyphs that the AZERTY host cannot pair on its own.
@@ -63,7 +64,10 @@ enum custom_keycodes {
     EG_KC6, EG_KC7, EG_KC8, EG_KC9, EG_KC0,
     EG_KCAST,            // keycap asterisk
     EG_ARRL,             // black left-pointing triangle
-    EG_ARRR              // black right-pointing triangle
+    EG_ARRR,             // black right-pointing triangle
+    // Enter: tap types a newline, hold reaches EDITOR, double tap locks it.
+    EG_ENT,
+    EG_FMT               // Ctrl held, K then D: format the document
 };
 
 // Unicode map, transcribed from ergol-r_moergo.json (layers 1dk / 2dk /
@@ -224,6 +228,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * Shift or Caps Lock; KC_3, KC_4, KC_EQL and KC_NUHS already do so via the
  * host layout and stay bare keycodes.
  * PrtScn: tap = PrtScr, hold = NAV_NUM, double tap = toggle NAV_NUM.
+ * The left thumb Enter behaves the same way for EDITOR, as the right thumb
+ * Space does for SYMBOL. The Space and Enter keys between the halves are the
+ * two encoder push switches.
  */
 
 [BASE] = LAYOUT_split_4x6_5(
@@ -231,7 +238,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,     KC_A,    KC_B,   KC_O,    KC_P,    KC_Z,                       KC_J, KC_SCLN,    KC_D, OSL(DK1),   KC_Y, KC_NUHS,
   KC_LSFT,    KC_Q,    KC_S,   KC_E,    KC_N,    KC_F,                       KC_L,    KC_R,    KC_T,    KC_I,    KC_U, EG_QUES,
   KC_LCTL,    KC_W,    KC_X,   KC_C,    KC_V, EG_COMM,  KC_SPC,    KC_ENT, EG_DOT,    KC_H,    KC_G, EG_MINS,    KC_K, EG_PSCR,
-                    KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, KC_ENT,    EG_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
+                    KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, EG_ENT,    EG_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
 ),
 /* NAV_NUM - navigation, editing, numpad, F-keys
  * Ctrl shortcuts are written in AZERTY scancodes: Ctrl+Z (undo) is C(KC_W) and
@@ -265,13 +272,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * = - * . / cells use their keypad twins instead, which the host maps the same
  * way whatever its layout.
  * Esc leaves for BASE, the way out when a double tap on Space locked the layer.
+ * The knobs turn into a media controller here: volume on the left, track skip
+ * on the right, and their two push switches mute and play.
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | BASE |      |  {   |  }   |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |  [   |  (   |  )   |  ]   |      |                    |  ~   |  ^   |      |      |      |  ?   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |  <   |  =   |  -   |  >   |  ,   |-------.    ,-------|  .   |  /   |      |      |      |  !   |
- * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
+ * |------+------+------+------+------+------| Mute  |    | Play  |------+------+------+------+------+------|
  * |      |  &   |  |   |  +   |  *   |  ;   |-------|    |-------|  :   |  \   |  `   |      |      |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            |      |      |  _   |      | /       /       \      \  |      |      |      |      |
@@ -281,7 +290,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   TO(BASE), _______, ALGR(KC_4), ALGR(KC_EQL), _______, _______,             _______,     _______, _______, _______, _______,  _______,
   _______, ALGR(KC_5), KC_5, KC_MINS, ALGR(KC_MINS), _______,                EG_TILD,    EG_CIRC, _______, _______, _______, S(KC_M),
   _______, KC_NUBS, KC_PEQL, KC_PMNS, S(KC_NUBS), KC_M,                      KC_PDOT,   KC_PSLS, _______, _______, _______, KC_SLSH,
-  _______, KC_1, ALGR(KC_6), S(KC_EQL), KC_PAST, KC_COMM, _______, _______,   KC_DOT, ALGR(KC_8), ALGR(KC_7), _______, _______, _______,
+  _______, KC_1, ALGR(KC_6), S(KC_EQL), KC_PAST, KC_COMM, KC_MUTE, KC_MPLY,   KC_DOT, ALGR(KC_8), ALGR(KC_7), _______, _______, _______,
                     _______, _______, KC_8, _______, _______,    _______, _______, _______, _______, _______
 ),
 /* DK1 - 1dk dead key, transcribed from the Glove80 1dk layer.
@@ -333,15 +342,54 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______, UM(E_ZAP), UM(E_X), UM(E_CONS), UM(E_VERIF), EG_WARN, KC_NO, KC_NO, UM(E_ROBOT), UM(E_HOUR), EG_GEAR, UM(E_MINUS), UM(E_KISS), KC_NO,
                     EG_ARRL, UM(E_LEFT), UM(E_RIGHT), EG_ARRR, G(KC_COMM),   UM(E_SHIP), UM(E_BROOM), UM(E_UP), UM(E_DOWN), KC_APP
 ),
+/* EDITOR - the editing shortcuts, hold the left thumb Enter
+ * Transcribed from the Glove80 Cursor layer, minus its navigation: NAV_NUM
+ * already carries Home/End/arrows/PgUp/PgDn and there is nothing to gain from
+ * a second copy. What is left is what a keyboard cannot reach in one stroke.
+ * Cut, Copy and Paste sit in the right index column, in that order top to
+ * bottom, so the three most chorded shortcuts of the day become one slide.
+ * Esc leaves for BASE, the way out when a double tap on Enter locked the layer.
+ * The knobs work the selection: the left one shrinks and extends it, the right
+ * one removes and adds an occurrence to the multi-cursor, and their two push
+ * switches select everything - the document, then every occurrence in it.
+ * Alt+Shift+F3, Alt+F3 and Ctrl+Alt+F3 are personal bindings, not defaults:
+ *   Rider   Unselect Occurrence / Add Selection for Next Occurrence /
+ *           Select All Occurrences
+ *   VS Code Undo Last Cursor / Add Selection To Next Find Match /
+ *           Change All Occurrences
+ * ,-----------------------------------------.                    ,-----------------------------------------.
+ * | BASE |      |      |      |      |      |                    |      |      |      |      |      |      |
+ * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
+ * |      |      |      |      |      |      |                    | Cut  |      | Dupl |      |      |      |
+ * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
+ * |      |      |      |      |      | Fmt  |-------.    ,-------| Copy |      |      |      |      |      |
+ * |------+------+------+------+------+------| SelAl |    | SelOc |------+------+------+------+------+------|
+ * |      |      |      |      |      |      |-------|    |-------|Paste |PstTxt|      |      |      |      |
+ * `-----------------------------------------/       /     \      \-----------------------------------------'
+ *            |      |      |      |      | /       /       \      \  |      |      |      |      |
+ *            `----------------------------------'           '------''---------------------------'
+ */
+[EDITOR] = LAYOUT_split_4x6_5(
+  TO(BASE), _______, _______, _______, _______, _______,                    _______, _______, _______, _______, _______, _______,
+  _______,  _______, _______, _______, _______, _______,                    C(KC_X), _______,  C(KC_D), _______, _______, _______,
+  _______,  _______, _______, _______, _______,  EG_FMT,                    C(KC_C), _______, _______, _______, _______, _______,
+  _______,  _______, _______, _______, _______, _______, C(KC_Q), C(A(KC_F3)), C(KC_V), G(C(A(KC_V))), _______, _______, _______, _______,
+                    _______, _______, _______, _______, _______,    _______, _______, _______, _______, _______
+),
 };
 
 #if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
-    [BASE]  = { ENCODER_CCW_CW(KC_UP,   KC_DOWN), ENCODER_CCW_CW(KC_LEFT, KC_RGHT) },
-    [NAV_NUM] = { ENCODER_CCW_CW(KC_WH_U, KC_WH_D), ENCODER_CCW_CW(KC_WH_L, KC_WH_R) },
-    [SYMBOL] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
-    [DK1] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
-    [EMOJI] = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) }
+    // The left knob moves horizontally and the right one vertically, the way
+    // the thumbs do: Left and Right sit on the left thumb, Up and Down on the
+    // right one.
+    [BASE]    = { ENCODER_CCW_CW(KC_LEFT, KC_RGHT), ENCODER_CCW_CW(KC_UP,   KC_DOWN) },
+    [NAV_NUM] = { ENCODER_CCW_CW(KC_WH_L, KC_WH_R), ENCODER_CCW_CW(KC_WH_U, KC_WH_D) },
+    [SYMBOL]  = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU), ENCODER_CCW_CW(KC_MPRV, KC_MNXT) },
+    [DK1]     = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+    [EMOJI]   = { ENCODER_CCW_CW(_______, _______), ENCODER_CCW_CW(_______, _______) },
+    // Shrink / extend the selection, then remove / add a multi-cursor occurrence.
+    [EDITOR]  = { ENCODER_CCW_CW(A(S(KC_LEFT)), A(S(KC_RGHT))), ENCODER_CCW_CW(A(S(KC_F3)), A(KC_F3)) }
 };
 #endif
 
@@ -357,6 +405,7 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 #define CLR_BLUE    0, 0, 64       // #000040 (25% brightness)
 #define CLR_VIOLET  48, 0, 64      // #300040 (25% brightness)
 #define CLR_PINK    64, 14, 46     // #400E2E (25% brightness)
+#define CLR_CYAN    0, 64, 64      // #004040 (25% brightness)
 #define CLR_OFF     0, 0, 0
 
 // Helper function to find LED index by matrix position
@@ -484,6 +533,12 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     // PrtScr - orange, the key that reaches NAV_NUM.
     set_led(matrix_to_led(8, 0), CLR_ORANGE);
 
+    // The left thumb Enter - cyan, the key that reaches EDITOR.
+    set_led(matrix_to_led(4, 4), CLR_CYAN);
+
+    // The right thumb Space - blue, the key that reaches SYMBOL.
+    set_led(matrix_to_led(9, 4), CLR_BLUE);
+
     // Esc - the active layer. BASE keeps the white of its column.
     switch (layer) {
         case NAV_NUM:
@@ -497,6 +552,9 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             break;
         case EMOJI:
             set_led(matrix_to_led(0, 0), CLR_VIOLET);
+            break;
+        case EDITOR:
+            set_led(matrix_to_led(0, 0), CLR_CYAN);
             break;
         default:
             break;
@@ -653,6 +711,7 @@ typedef struct {
 static tap_layer_t tap_layers[] = {
     {NAV_NUM, KC_PSCR, TL_IDLE, 0, false},
     {SYMBOL,  KC_SPC,  TL_IDLE, 0, false},
+    {EDITOR,  KC_ENT,  TL_IDLE, 0, false},
 };
 
 static tap_layer_t *tap_layer_for(uint16_t keycode) {
@@ -661,6 +720,8 @@ static tap_layer_t *tap_layer_for(uint16_t keycode) {
             return &tap_layers[0];
         case EG_SPC:
             return &tap_layers[1];
+        case EG_ENT:
+            return &tap_layers[2];
         default:
             return NULL;
     }
@@ -841,7 +902,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case EG_PSCR:
-        case EG_SPC: {
+        case EG_SPC:
+        case EG_ENT: {
             tap_layer_t *tl = tap_layer_for(keycode);
             if (record->event.pressed) {
                 tap_layer_press(tl);
@@ -862,6 +924,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 const dual_glyph_t *pair = dual_glyph_for(keycode);
                 tap_dual_glyph(pair, dual_glyph_wants_shift(pair));
+            }
+            return false;
+
+        case EG_FMT:
+            // Ctrl stays down across both taps, as Rider and VS Code expect.
+            if (record->event.pressed) {
+                register_code(KC_LCTL);
+                tap_code(KC_K);
+                tap_code(KC_D);
+                unregister_code(KC_LCTL);
             }
             return false;
 

@@ -490,6 +490,16 @@
             "name": "EG_ARRR",
             "title": "black right-pointing triangle emoji (U+25B6 U+FE0F)",
             "shortName": "Tri R"
+        },
+        {
+            "name": "EG_ENT",
+            "title": "Enter / hold EDITOR / double tap locks it",
+            "shortName": "Enter"
+        },
+        {
+            "name": "EG_FMT",
+            "title": "Ctrl+K, Ctrl+D - format the document",
+            "shortName": "Fmt"
         }
     ]
 }
