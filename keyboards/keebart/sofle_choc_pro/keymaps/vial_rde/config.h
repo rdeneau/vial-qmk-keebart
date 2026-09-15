@@ -4,6 +4,7 @@
 #define VIAL_UNLOCK_COMBO_COLS {0, 0}
 
 // RGB Matrix custom configuration
+#undef RGB_MATRIX_DEFAULT_MODE
 #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
 #undef RGB_MATRIX_DEFAULT_VAL
 #define RGB_MATRIX_DEFAULT_VAL 19  // Brightness 7.5/100 (19/255)
