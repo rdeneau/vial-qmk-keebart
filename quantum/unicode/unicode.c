@@ -239,6 +239,11 @@ __attribute__((weak)) void unicode_input_start(void) {
             tap_code(KC_KP_PLUS);
             break;
         case UNICODE_MODE_WINCOMPOSE:
+            // For increased reliability, and to keep Shift out of the sequence on
+            // layouts whose digit row is shifted, use numpad keys for the digits
+            if (!unicode_saved_led_state.num_lock) {
+                tap_code(KC_NUM_LOCK);
+            }
             tap_code(UNICODE_KEY_WINC);
             tap_code(KC_U);
             break;
@@ -272,6 +277,9 @@ __attribute__((weak)) void unicode_input_finish(void) {
             break;
         case UNICODE_MODE_WINCOMPOSE:
             tap_code(KC_ENTER);
+            if (!unicode_saved_led_state.num_lock) {
+                tap_code(KC_NUM_LOCK);
+            }
             break;
         case UNICODE_MODE_EMACS:
             tap_code16(KC_ENTER);
@@ -294,6 +302,9 @@ __attribute__((weak)) void unicode_input_cancel(void) {
             break;
         case UNICODE_MODE_WINCOMPOSE:
             tap_code(KC_ESCAPE);
+            if (!unicode_saved_led_state.num_lock) {
+                tap_code(KC_NUM_LOCK);
+            }
             break;
         case UNICODE_MODE_WINDOWS:
             unregister_code(KC_LEFT_ALT);
@@ -317,6 +328,13 @@ static void send_nibble_wrapper(uint8_t digit) {
                    ? KC_KP_1 + (10 + digit - 1) % 10
                    : KC_A + (digit - 10);
         tap_code(kc);
+        return;
+    }
+    if (unicode_config.input_mode == UNICODE_MODE_WINCOMPOSE && digit < 10) {
+        // Numpad digits only: a-f still go through send_nibble(), whose lookup
+        // table knows the host layout, while the numpad keeps Shift out of the
+        // sequence on layouts whose digit row is shifted
+        tap_code(KC_KP_1 + (10 + digit - 1) % 10);
         return;
     }
     send_nibble(digit);
