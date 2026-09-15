@@ -354,7 +354,7 @@
         {
             "name": "EG_DEG",
             "title": "degree / 0 (shift or caps lock)",
-            "shortName": "°\n0"
+            "shortName": "Deg\n0"
         },
         {
             "name": "EG_COMM",
