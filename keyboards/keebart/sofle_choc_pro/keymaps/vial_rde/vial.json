@@ -500,6 +500,16 @@
             "name": "EG_FMT",
             "title": "Ctrl+K, Ctrl+D - format the document",
             "shortName": "Fmt"
+        },
+        {
+            "name": "EG_CMNT",
+            "title": "Ctrl+K, Ctrl+C - comment the selection",
+            "shortName": "Cmnt"
+        },
+        {
+            "name": "EG_UNCM",
+            "title": "Ctrl+K, Ctrl+U - uncomment the selection",
+            "shortName": "Uncm"
         }
     ]
 }

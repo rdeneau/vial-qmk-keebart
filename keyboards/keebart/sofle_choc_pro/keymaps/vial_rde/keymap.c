@@ -69,7 +69,9 @@ enum custom_keycodes {
     EG_ARRR,             // black right-pointing triangle
     // Enter: tap types a newline, hold reaches EDITOR, double tap locks it.
     EG_ENT,
-    EG_FMT               // Ctrl held, K then D: format the document
+    EG_FMT,              // Ctrl held, K then D: format the document
+    EG_CMNT,             // Ctrl held, K then C: comment the selection
+    EG_UNCM              // Ctrl held, K then U: uncomment the selection
 };
 
 // Unicode map, transcribed from ergol-r_moergo.json (layers 1dk / 2dk /
@@ -353,9 +355,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * Transcribed from the Glove80 Cursor layer, minus its navigation: NAV_NUM
  * already carries Home/End/arrows/PgUp/PgDn and there is nothing to gain from
  * a second copy. What is left is what a keyboard cannot reach in one stroke.
- * The clipboard sits on the left home row - Select All, Cut, Copy, Paste on
- * a, s, e, n - with Undo and Redo on the keys that name them, z and q, and
- * Paste as plain text one row below Paste, on v.
+ * The clipboard sits on the left home row - Cut, Copy, Paste on s, e, n -
+ * with Paste as plain text one row below Paste, on v.
+ * Undo and Redo sit on the right hand, on l and r: the left thumb holds the
+ * layer, so the left hand is the busy one, and left reads as back, right as
+ * forward. Comment and uncomment are on c and x, sharing the Ctrl+K prefix
+ * with format on f.
+ * Select All, Open and Print left the layer: Ctrl+A, Ctrl+O and Ctrl+P are one
+ * stroke either way, and Select All is still on the left knob push below.
  * Ctrl shortcuts are written in AZERTY scancodes: Ctrl+Z (undo) is C(KC_W) and
  * Ctrl+A (select all) is C(KC_Q), because the host swaps those letter pairs.
  * Esc leaves for BASE, the way out when a double tap on Enter locked the layer.
@@ -370,20 +377,20 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | BASE |      |      |      |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      | Redo |      | Open |Print |      |                    | Join |      | Dupl |      |      |      |
+ * |      |      |      |      |      |      |                    | Join |      | Dupl |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      | SelAl| Cut  | Copy |Paste | Fmt  |-------.    ,-------|      |      |      |      |      |      |
+ * |      |      | Cut  | Copy |Paste | Fmt  |-------.    ,-------| Undo | Redo |      |      |      |      |
  * |------+------+------+------+------+------| SelAl |    | SelOc |------+------+------+------+------+------|
- * |      | Undo |      |      |PstTxt|      |-------|    |-------|      |      |      |      |      |      |
+ * |      |      |Uncomm|Commnt|PstTxt|      |-------|    |-------|      |      |      |      |      |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
  *            |      |      |      |      | /       /       \      \  |      |      |      |      |
  *            `----------------------------------'           '------''---------------------------'
  */
 [EDITOR] = LAYOUT_split_4x6_5(
   TO(BASE), _______, _______, _______, _______, _______,                    _______, _______, _______, _______, _______, _______,
-  _______,  C(KC_Y), _______, C(KC_O), C(KC_P), _______,                 S(C(KC_J)), _______,  C(KC_D), _______, _______, _______,
-  _______,  C(KC_Q), C(KC_X), C(KC_C), C(KC_V),  EG_FMT,                    _______, _______, _______, _______, _______, _______,
-  _______,  C(KC_W), _______, _______, G(C(A(KC_V))), _______, C(KC_Q), C(A(KC_F3)), _______, _______, _______, _______, _______, _______,
+  _______,  _______, _______, _______, _______, _______,                 S(C(KC_J)), _______,  C(KC_D), _______, _______, _______,
+  _______,  _______, C(KC_X), C(KC_C), C(KC_V),  EG_FMT,                    C(KC_W), C(KC_Y), _______, _______, _______, _______,
+  _______,  _______, EG_UNCM, EG_CMNT, G(C(A(KC_V))), _______, C(KC_Q), C(A(KC_F3)), _______, _______, _______, _______, _______, _______,
                     _______, _______, _______, _______, _______,    _______, _______, _______, _______, _______
 ),
 };
@@ -939,11 +946,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case EG_FMT:
+        case EG_CMNT:
+        case EG_UNCM:
             // Ctrl stays down across both taps, as Rider and VS Code expect.
+            // K is the common prefix; only the second letter tells them apart.
             if (record->event.pressed) {
+                const uint8_t second = keycode == EG_FMT  ? KC_D
+                                     : keycode == EG_CMNT ? KC_C
+                                                          : KC_U;
                 register_code(KC_LCTL);
                 tap_code(KC_K);
-                tap_code(KC_D);
+                tap_code(second);
                 unregister_code(KC_LCTL);
             }
             return false;
