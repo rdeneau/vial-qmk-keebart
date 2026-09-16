@@ -407,9 +407,9 @@
             "shortName": "Gear"
         },
         {
-            "name": "EG_SPC",
-            "title": "space, hold reaches SYMBOL, double tap locks it",
-            "shortName": "Spc"
+            "name": "EG_RSVD",
+            "title": "reserved - do not use (was Space, now LT(SYMBOL, KC_SPC))",
+            "shortName": "----"
         },
         {
             "name": "EG_QUES",

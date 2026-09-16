@@ -49,8 +49,10 @@ enum custom_keycodes {
     EG_POINT,            // index pointing up
     EG_WARN,             // warning sign
     EG_GEAR,             // gear
-    // Space: tap types a space, hold reaches SYMBOL, double tap locks it.
-    EG_SPC,
+    // Frozen slot, once Space. It is now LT(SYMBOL, KC_SPC): the tap must
+    // reach the host at once, which no double-tap window allows. The entry
+    // stays so the indices below keep the values the .vil exports address.
+    EG_RSVD,
     // Everything below is appended, never inserted: the eighteen keycodes above
     // are addressed by index in the .vil exports, and reordering them would
     // silently rewrite a saved layout.
@@ -207,6 +209,11 @@ const uint32_t PROGMEM unicode_map[] = {
     [E_BROOM]  = 0x1F9F9                       // broom
 };
 
+// The right thumb: tap a space, hold reaches SYMBOL. A plain layer tap, so the
+// space leaves on release - see the tap_layers[] comment for why it is not one
+// of the hand-rolled keys.
+#define SYM_SPC LT(SYMBOL, KC_SPC)
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 /*
  * BASE - Ergol-R (glyphs as rendered by the French AZERTY host)
@@ -228,9 +235,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * Shift or Caps Lock; KC_3, KC_4, KC_EQL and KC_NUHS already do so via the
  * host layout and stay bare keycodes.
  * PrtScn: tap = PrtScr, hold = NAV_NUM, double tap = toggle NAV_NUM.
- * The left thumb Enter behaves the same way for EDITOR, as the right thumb
- * Space does for SYMBOL. The Space and Enter keys between the halves are the
- * two encoder push switches.
+ * The left thumb Enter behaves the same way for EDITOR. The right thumb Space
+ * only taps and holds - see the tap_layers[] comment for why it has no double
+ * tap. The Space and Enter keys between the halves are the two encoder push
+ * switches.
  */
 
 [BASE] = LAYOUT_split_4x6_5(
@@ -238,7 +246,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,     KC_A,    KC_B,   KC_O,    KC_P,    KC_Z,                       KC_J, KC_SCLN,    KC_D, OSL(DK1),   KC_Y, KC_NUHS,
   KC_LSFT,    KC_Q,    KC_S,   KC_E,    KC_N,    KC_F,                       KC_L,    KC_R,    KC_T,    KC_I,    KC_U, EG_QUES,
   KC_LCTL,    KC_W,    KC_X,   KC_C,    KC_V, EG_COMM,  KC_SPC,    KC_ENT, EG_DOT,    KC_H,    KC_G, EG_MINS,    KC_K, EG_PSCR,
-                    KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, EG_ENT,    EG_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
+                    KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, EG_ENT,   SYM_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
 ),
 /* NAV_NUM - navigation, numpad, F-keys
  * The editing shortcuts moved to EDITOR, which is what the left thumb is for.
@@ -699,6 +707,11 @@ static void dk_hold_emit(bool extra_shift) {
 // dance does not link. The tap keycode is held back until the double-tap window
 // closes, otherwise a double tap would emit it first - which for PrtScr would
 // flash the Windows capture overlay.
+//
+// That hold-back costs one TAPPING_TERM on every tap, which is why the right
+// thumb Space is not here: SYMBOL is the only layer reached mid-flow, so its
+// space must reach the host on release. It is a plain LT(SYMBOL, KC_SPC), and
+// gives up the double-tap lock for it.
 
 enum tap_layer_state { TL_IDLE, TL_HELD, TL_TAPPED };
 
@@ -712,7 +725,6 @@ typedef struct {
 
 static tap_layer_t tap_layers[] = {
     {NAV_NUM, KC_PSCR, TL_IDLE, 0, false},
-    {SYMBOL,  KC_SPC,  TL_IDLE, 0, false},
     {EDITOR,  KC_ENT,  TL_IDLE, 0, false},
 };
 
@@ -720,10 +732,8 @@ static tap_layer_t *tap_layer_for(uint16_t keycode) {
     switch (keycode) {
         case EG_PSCR:
             return &tap_layers[0];
-        case EG_SPC:
-            return &tap_layers[1];
         case EG_ENT:
-            return &tap_layers[2];
+            return &tap_layers[1];
         default:
             return NULL;
     }
@@ -904,7 +914,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case EG_PSCR:
-        case EG_SPC:
         case EG_ENT: {
             tap_layer_t *tl = tap_layer_for(keycode);
             if (record->event.pressed) {
