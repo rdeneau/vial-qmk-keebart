@@ -8,6 +8,10 @@
 #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
 #undef RGB_MATRIX_DEFAULT_VAL
 #define RGB_MATRIX_DEFAULT_VAL 19  // Brightness 7.5/100 (19/255)
+// The board stays lit when the PC sleeps: RGB_MATRIX_SLEEP, in the keyboard's
+// own config.h, only fires on a USB suspend, which Windows Modern Standby
+// never sends. An idle timeout is what actually turns the LEDs off.
+#define RGB_MATRIX_TIMEOUT 60000  // one minute without input
 
 // Unicode input - WinCompose on Windows.
 // The compose key is moved off Right Alt so AltGr stays usable on the AZERTY
