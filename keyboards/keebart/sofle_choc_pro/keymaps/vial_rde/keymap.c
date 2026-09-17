@@ -293,14 +293,17 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * = - * . / cells use their keypad twins instead, which the host maps the same
  * way whatever its layout.
  * Esc leaves for BASE, the way out when a double tap on Space locked the layer.
+ * The right half carries a second star, on t, right of the slash on r, so the
+ * two comment delimiters of C and F# are neighbouring keys instead of one on
+ * each hand.
  * The knobs turn into a media controller here: volume on the left, track skip
  * on the right, and their two push switches mute and play.
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * | BASE |      |  {   |  }   |      |      |                    |      |      |      |      |      |      |
+ * | BASE |      |  (   |  )   |      |      |                    |      |      |      |      |      |      |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |  [   |  (   |  )   |  ]   |      |                    |  ~   |  ^   |      |      |      |  ?   |
+ * |      |  [   |  {   |  }   |  ]   |      |                    |  ~   |  ^   |      |      |      |  ?   |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |  <   |  =   |  -   |  >   |  ,   |-------.    ,-------|  .   |  /   |      |      |      |  !   |
+ * |      |  <   |  =   |  -   |  >   |  ,   |-------.    ,-------|  .   |  /   |  *   |      |      |  !   |
  * |------+------+------+------+------+------| Mute  |    | Play  |------+------+------+------+------+------|
  * |      |  &   |  |   |  +   |  *   |  ;   |-------|    |-------|  :   |  \   |  `   |      |      |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
@@ -308,9 +311,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *            `----------------------------------'           '------''---------------------------'
  */
 [SYMBOL] = LAYOUT_split_4x6_5(
-  TO(BASE), _______, ALGR(KC_4), ALGR(KC_EQL), _______, _______,             _______,     _______, _______, _______, _______,  _______,
-  _______, ALGR(KC_5), KC_5, KC_MINS, ALGR(KC_MINS), _______,                EG_TILD,    EG_CIRC, _______, _______, _______, S(KC_M),
-  _______, KC_NUBS, KC_PEQL, KC_PMNS, S(KC_NUBS), KC_M,                      KC_PDOT,   KC_PSLS, _______, _______, _______, KC_SLSH,
+  TO(BASE), _______, KC_5, KC_MINS, _______, _______,                       _______,     _______, _______, _______, _______,  _______,
+  _______, ALGR(KC_5), ALGR(KC_4), ALGR(KC_EQL), ALGR(KC_MINS), _______,     EG_TILD,    EG_CIRC, _______, _______, _______, S(KC_M),
+  _______, KC_NUBS, KC_PEQL, KC_PMNS, S(KC_NUBS), KC_M,                      KC_PDOT,   KC_PSLS, KC_PAST, _______, _______, KC_SLSH,
   _______, KC_1, ALGR(KC_6), S(KC_EQL), KC_PAST, KC_COMM, KC_MUTE, KC_MPLY,   KC_DOT, ALGR(KC_8), ALGR(KC_7), _______, _______, _______,
                     _______, _______, KC_8, _______, _______,    _______, _______, _______, _______, _______
 ),
