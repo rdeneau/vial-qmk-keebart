@@ -71,7 +71,12 @@ enum custom_keycodes {
     EG_ENT,
     EG_FMT,              // Ctrl held, K then D: format the document
     EG_CMNT,             // Ctrl held, K then C: comment the selection
-    EG_UNCM              // Ctrl held, K then U: uncomment the selection
+    EG_UNCM,             // Ctrl held, K then U: uncomment the selection
+    // The four thumb arrows: tap the step, hold the jump.
+    EG_LEFT,             // Left  / hold: Home
+    EG_RGHT,             // Right / hold: End
+    EG_UP,               // Up    / hold: PgUp
+    EG_DOWN              // Down  / hold: PgDn
 };
 
 // Unicode map, transcribed from ergol-r_moergo.json (layers 1dk / 2dk /
@@ -230,7 +235,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *   3  |LCtrl |   z  |   x  |   c  |   v  | ,  ; |-------|    |-------| .  : |   h  |   g  | -  _ |   k  |PrtScn|  8
  *      `-----------------------------------------/       /     \      \-----------------------------------------'
  *   4             | LAlt | Left |Right | Del  | / Enter /       \ SYM  \  | Bspc |  Up  | Down | RGui |            9
- *                 |      |      |      |      |/       /         \      \ |      |      |      |      |
+ *                 |      | Home | End  |      |/       /         \      \ |      | PgUp | PgDn |      |
  *                 `----------------------------------'           '------''---------------------------'
  *
  * The upper row and the four ,;/.:/-_ keys emit their second glyph under
@@ -241,6 +246,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * only taps and holds - see the tap_layers[] comment for why it has no double
  * tap. The Space and Enter keys between the halves are the two encoder push
  * switches.
+ * The four thumb arrows tap their step and hold the jump printed under them -
+ * see the nav_holds[] comment for what that costs.
+ * Down and RGui pressed together are a combo typing Menu; like F1-F12 it lives
+ * in the EEPROM, not here.
  */
 
 [BASE] = LAYOUT_split_4x6_5(
@@ -248,7 +257,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_TAB,     KC_A,    KC_B,   KC_O,    KC_P,    KC_Z,                       KC_J, KC_SCLN,    KC_D, OSL(DK1),   KC_Y, KC_NUHS,
   KC_LSFT,    KC_Q,    KC_S,   KC_E,    KC_N,    KC_F,                       KC_L,    KC_R,    KC_T,    KC_I,    KC_U, EG_QUES,
   KC_LCTL,    KC_W,    KC_X,   KC_C,    KC_V, EG_COMM,  KC_SPC,    KC_ENT, EG_DOT,    KC_H,    KC_G, EG_MINS,    KC_K, EG_PSCR,
-                    KC_LALT, KC_LEFT, KC_RGHT, KC_DEL, EG_ENT,   SYM_SPC, KC_BSPC,   KC_UP, KC_DOWN, KC_RGUI
+                    KC_LALT, EG_LEFT, EG_RGHT, KC_DEL, EG_ENT,   SYM_SPC, KC_BSPC,   EG_UP, EG_DOWN, KC_RGUI
 ),
 /* NAV_NUM - navigation, numpad, F-keys
  * The editing shortcuts moved to EDITOR, which is what the left thumb is for.
@@ -780,6 +789,52 @@ static void tap_layer_release(tap_layer_t *tl) {
     }
 }
 
+// Thumb arrows: tap the step, hold the jump --------------------------------
+//
+// Hand-rolled for the same reason as the layer keys above: Vial owns
+// tap_dance_actions[], so a static tap dance does not link.
+// The arrow leaves on release, which is what costs these keys their auto
+// repeat: holding one now types Home, End, PgUp or PgDn once. NAV_NUM keeps a
+// repeating copy of the four arrows under the left fingers, and the two knobs
+// move the caret without pressing a key at all.
+
+typedef struct {
+    uint16_t keycode; // the custom keycode sitting on the thumb
+    uint16_t tapped;  // what a tap types
+    uint16_t held;    // what a hold types
+    uint16_t timer;
+    bool     pending; // pressed, and neither branch has fired yet
+} nav_hold_t;
+
+static nav_hold_t nav_holds[] = {
+    {EG_LEFT, KC_LEFT, KC_HOME, 0, false},
+    {EG_RGHT, KC_RGHT, KC_END,  0, false},
+    {EG_UP,   KC_UP,   KC_PGUP, 0, false},
+    {EG_DOWN, KC_DOWN, KC_PGDN, 0, false},
+};
+
+static nav_hold_t *nav_hold_for(uint16_t keycode) {
+    for (uint8_t i = 0; i < ARRAY_SIZE(nav_holds); i++) {
+        if (nav_holds[i].keycode == keycode) {
+            return &nav_holds[i];
+        }
+    }
+    return NULL;
+}
+
+static void nav_hold_press(nav_hold_t *nh) {
+    nh->timer   = timer_read();
+    nh->pending = true;
+}
+
+static void nav_hold_release(nav_hold_t *nh) {
+    if (!nh->pending) {
+        return; // the hold already typed its jump
+    }
+    nh->pending = false;
+    tap_code(nh->tapped);
+}
+
 layer_state_t layer_state_set_user(layer_state_t state) {
     // TO(BASE) on Esc, or any other exit, must not leave a lock flag set.
     for (uint8_t i = 0; i < ARRAY_SIZE(tap_layers); i++) {
@@ -799,6 +854,13 @@ void matrix_scan_user(void) {
         if (tl->state == TL_TAPPED && timer_elapsed(tl->timer) >= TAPPING_TERM) {
             tl->state = TL_IDLE;
             tap_code(tl->tap_keycode);
+        }
+    }
+    for (uint8_t i = 0; i < ARRAY_SIZE(nav_holds); i++) {
+        nav_hold_t *nh = &nav_holds[i];
+        if (nh->pending && timer_elapsed(nh->timer) >= TAPPING_TERM) {
+            nh->pending = false;
+            tap_code(nh->held);
         }
     }
 }
@@ -919,6 +981,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 dk_hold_emit(false);
             }
             return false;
+
+        case EG_LEFT ... EG_DOWN: {
+            nav_hold_t *nh = nav_hold_for(keycode);
+            if (record->event.pressed) {
+                nav_hold_press(nh);
+            } else {
+                nav_hold_release(nh);
+            }
+            return false;
+        }
 
         case EG_PSCR:
         case EG_ENT: {

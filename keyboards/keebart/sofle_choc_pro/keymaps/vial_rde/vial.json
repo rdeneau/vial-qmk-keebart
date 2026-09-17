@@ -510,6 +510,26 @@
             "name": "EG_UNCM",
             "title": "Ctrl+K, Ctrl+U - uncomment the selection",
             "shortName": "Uncm"
+        },
+        {
+            "name": "EG_LEFT",
+            "title": "Left / hold: Home",
+            "shortName": "Left"
+        },
+        {
+            "name": "EG_RGHT",
+            "title": "Right / hold: End",
+            "shortName": "Right"
+        },
+        {
+            "name": "EG_UP",
+            "title": "Up / hold: PgUp",
+            "shortName": "Up"
+        },
+        {
+            "name": "EG_DOWN",
+            "title": "Down / hold: PgDn",
+            "shortName": "Down"
         }
     ]
 }
