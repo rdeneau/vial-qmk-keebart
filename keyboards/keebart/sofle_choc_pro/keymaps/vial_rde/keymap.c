@@ -376,6 +376,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * layer, so the left hand is the busy one, and left reads as back, right as
  * forward. Comment and uncomment are on c and x, sharing the Ctrl+K prefix
  * with format on f.
+ * The outer right column zooms: Ctrl+KP_Plus zooms in on the = key,
+ * Ctrl+KP_Minus zooms out on the * key. Keypad codes, so the host layout
+ * cannot move them.
  * Select All, Open and Print left the layer: Ctrl+A, Ctrl+O and Ctrl+P are one
  * stroke either way, and Select All is still on the left knob push below.
  * Ctrl shortcuts are written in AZERTY scancodes: Ctrl+Z (undo) is C(KC_W) and
@@ -390,9 +393,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *   VS Code Undo Last Cursor / Add Selection To Next Find Match /
  *           Change All Occurrences
  * ,-----------------------------------------.                    ,-----------------------------------------.
- * | BASE |      |      |      |      |      |                    |      |      |      |      |      |      |
+ * | BASE |      |      |      |      |      |                    |      |      |      |      |      |Zoom +|
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
- * |      |      |      |      |      |      |                    | Join |      | Dupl |      |      |      |
+ * |      |      |      |      |      |      |                    | Join |      | Dupl |      |      |Zoom -|
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
  * |      |      | Cut  | Copy |Paste | Fmt  |-------.    ,-------| Undo | Redo |      |      |      |      |
  * |------+------+------+------+------+------| SelAl |    | SelOc |------+------+------+------+------+------|
@@ -402,8 +405,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *            `----------------------------------'           '------''---------------------------'
  */
 [EDITOR] = LAYOUT_split_4x6_5(
-  TO(BASE), _______, _______, _______, _______, _______,                    _______, _______, _______, _______, _______, _______,
-  _______,  _______, _______, _______, _______, _______,                 S(C(KC_J)), _______,  C(KC_D), _______, _______, _______,
+  TO(BASE), _______, _______, _______, _______, _______,                    _______, _______, _______, _______, _______, C(KC_PPLS),
+  _______,  _______, _______, _______, _______, _______,                 S(C(KC_J)), _______,  C(KC_D), _______, _______, C(KC_PMNS),
   _______,  _______, C(KC_X), C(KC_C), C(KC_V),  EG_FMT,                    C(KC_W), C(KC_Y), _______, _______, _______, _______,
   _______,  _______, EG_UNCM, EG_CMNT, G(C(A(KC_V))), _______, C(KC_Q), C(A(KC_F3)), _______, _______, _______, _______, _______, _______,
                     _______, _______, _______, _______, _______,    _______, _______, _______, _______, _______
