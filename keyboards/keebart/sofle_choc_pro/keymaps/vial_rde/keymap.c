@@ -248,7 +248,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * switches.
  * The four thumb arrows tap their step and hold the jump printed under them -
  * see the nav_holds[] comment for what that costs.
- * Down and RGui pressed together are a combo typing Menu; like F1-F12 it lives
+ * k and PrtScn pressed together are a combo typing Menu; like F1-F12 it lives
  * in the EEPROM, not here.
  */
 
