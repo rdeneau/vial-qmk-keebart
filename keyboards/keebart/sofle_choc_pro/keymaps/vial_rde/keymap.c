@@ -263,6 +263,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * The editing shortcuts moved to EDITOR, which is what the left thumb is for.
  * Esc leaves for BASE, the way out when a double tap on PrtScr locked the layer.
  * No Num Lock key: it is on by default on the host.
+ * The Bspc thumb stays transparent: a keypad is worth less without a
+ * Backspace than with a second zero, and the first one is still on the Up
+ * thumb next to it.
  * ,-----------------------------------------.                    ,-----------------------------------------.
  * | BASE |  F1  |  F2  |  F3  |  F4  |  F5  |                    |  F6  |  F7  |  F8  |  F9  | F10  | F11  |
  * |------+------+------+------+------+------|                    |------+------+------+------+------+------|
@@ -272,7 +275,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+------|       |    |       |------+------+------+------+------+------|
  * |      |      |      |      |      |      |-------|    |-------|  KP. |  KP1 |  KP2 |  KP3 |  KP= |      |
  * `-----------------------------------------/       /     \      \-----------------------------------------'
- *            |      |      |      |      | /       /       \      \  | KP0  | KP0  | KP,  |KPEnt |
+ *            |      |      |      |      | /       /       \      \  |      | KP0  | KP,  |KPEnt |
  *            |      |      |      |      |/       /         \      \ |      |      |      |      |
  *            `----------------------------------'           '------''---------------------------'
  */
@@ -281,7 +284,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______, _______, KC_HOME,   KC_UP,   KC_END,  KC_PGUP,                  KC_PSLS,  KC_P7,  KC_P8,   KC_P9, KC_PAST,  KC_F12,
   _______, _______, KC_LEFT, KC_DOWN,  KC_RGHT,  KC_PGDN,                  KC_PMNS,  KC_P4,  KC_P5,   KC_P6, KC_PPLS, _______,
   _______, _______, _______, _______, _______, _______, _______, _______, KC_PDOT,  KC_P1,  KC_P2,   KC_P3, KC_PEQL, _______,
-                    _______, _______, _______, _______, _______,  _______, KC_P0, KC_P0, KC_PCMM, KC_PENT
+                    _______, _______, _______, _______, _______,  _______, _______, KC_P0, KC_PCMM, KC_PENT
 ),
 /* SYMBOL - brackets, operators, punctuation (hold the right thumb Space)
  * Transcribed from the Glove80 Symbol layer; its Tab, Space, Enter, Ins, Esc,
@@ -536,14 +539,13 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
         }
         set_led(matrix_to_led(6, 0), CLR_PINK);
 
-        // The keypad digits only: 7 8 9 / 4 5 6 / 1 2 3, then the two zeros on
-        // the thumbs. The operators around them stay as the base map had them.
+        // The keypad digits only: 7 8 9 / 4 5 6 / 1 2 3, then the zero on the
+        // Up thumb. The operators around them stay as the base map had them.
         for (uint8_t row = 6; row <= 8; row++) {
             for (uint8_t col = 2; col <= 4; col++) {
                 set_led(matrix_to_led(row, col), CLR_YELLOW);
             }
         }
-        set_led(matrix_to_led(9, 3), CLR_YELLOW);
         set_led(matrix_to_led(9, 2), CLR_YELLOW);
     }
 
